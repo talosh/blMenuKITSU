@@ -4,6 +4,10 @@ from PySide2 import QtWidgets, QtCore
 
 from pprint import pprint, pformat
 
+from python.app import blMenuKITSU
+from python.framework import AppFramework
+
+
 '''
 from python.config import get_config_data
 from python.config import config_reader
@@ -19,12 +23,14 @@ DEBUG=True
 
 __version__ = 'v0.0.1.dev.001'
 
-class blMenuKITSU(QtWidgets.QApplication):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 def main():
-    app = blMenuKITSU([])
+    fw = AppFramework(
+        app_name = APP_NAME,
+        version = __version__,
+        debug = DEBUG
+    )
+
+    app = blMenuKITSU([], framework = fw)
 
     window = QtWidgets.QWidget()
     window.setWindowTitle('Hello PySide2')
