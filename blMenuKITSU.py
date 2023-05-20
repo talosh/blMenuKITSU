@@ -31,9 +31,8 @@ def main():
     )
 
     app = blMenuKITSU([], framework = fw)
-
-    window = QtWidgets.QWidget()
-    window.setWindowTitle('Hello PySide2')
+    
+    window = app.main_window()
     window.show()
 
     sys.exit(app.exec_())
