@@ -24,6 +24,7 @@ DEBUG=True
 __version__ = 'v0.0.1.dev.001'
 
 def main():
+    print (QtCore.__version__)
     fw = AppFramework(
         app_name = APP_NAME,
         version = __version__,
