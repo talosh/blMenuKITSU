@@ -37,12 +37,16 @@ class blMenuKITSU(QtWidgets.QApplication):
         encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
         if encoded_kitsu_pass:
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
+        self.flapi_host = self.prefs.get('flapi_host', 'localhost')
+        self.flapi_key = self.prefs.get('flapi_key', '')
 
     def main_window(self):
 
         self.kitsu_host_text = self.kitsu_host
         self.kitsu_user_text = self.kitsu_user
         self.kitsu_pass_text = self.kitsu_pass
+        self.flapi_host_text = self.flapi_host
+        self.flapi_key_text = self.flapi_key
 
         def txt_KitsuHost_textChanged():
             self.kitsu_host_text = txt_KitsuHost.text()
@@ -56,6 +60,15 @@ class blMenuKITSU(QtWidgets.QApplication):
 
         def txt_KitsuConnect_Clicked():
             kitsu_connect_btn.setText('Disconnect')
+
+        def txt_FlapiHost_textChanged():
+            self.flapi_host_text = txt_KitsuPass.text()
+
+        def txt_FlapiKey_textChanged():
+            self.flapi_key_text = txt_FlapiKey.text()
+
+        def txt_FlapiConnect_Clicked():
+            flapi_connect_btn.setText('Disconnect')
 
         # window = QtWidgets.QWidget()
         window = FramelessWindow()
@@ -158,19 +171,75 @@ class blMenuKITSU(QtWidgets.QApplication):
         vbox1.addLayout(hbox_spacer)
 
         # Flapi login box
-        vbox2 = QtWidgets.QVBoxLayout()
+        flapi_vbox1 = QtWidgets.QVBoxLayout()
 
-        lbl_FlapiLogin = QtWidgets.QLabel('Flapi Server: ', window)
-        lbl_FlapiLogin.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
-        lbl_FlapiLogin.setFixedHeight(28)
-        lbl_FlapiLogin.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        vbox2.addWidget(lbl_FlapiLogin)
+        lbl_Flapi = QtWidgets.QLabel('Flapi Server: ', window)
+        lbl_Flapi.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_Flapi.setFixedHeight(28)
+        lbl_Flapi.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        flapi_vbox1.addWidget(lbl_Flapi)
+    
+        flapi_hbox1 = QtWidgets.QHBoxLayout()
+        lbl_FlapiHost = QtWidgets.QLabel('Server: ', window)
+        lbl_FlapiHost.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiHost.setFixedSize(108, 28)
+        lbl_FlapiHost.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
+        txt_FlapiHost = QtWidgets.QLineEdit(self.flapi_host, window)
+        txt_FlapiHost.setFocusPolicy(QtCore.Qt.StrongFocus)
+        txt_FlapiHost.setMinimumSize(280, 28)
+        # txt_KitsuHost.move(128,0)
+        txt_FlapiHost.setStyleSheet(
+            'QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454;}'
+            )
+        txt_FlapiHost.textChanged.connect(txt_FlapiHost_textChanged)
+
+        flapi_hbox1.addWidget(lbl_FlapiHost)
+        flapi_hbox1.addWidget(txt_FlapiHost)
+        flapi_vbox1.addLayout(flapi_hbox1)
+        
+        flapi_hbox2 = QtWidgets.QHBoxLayout()
+
+        lbl_FlapiKey = QtWidgets.QLabel('API Key: ', window)
+        lbl_FlapiKey.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiKey.setFixedSize(108, 28)
+        lbl_FlapiKey.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+        txt_FlapiKey = QtWidgets.QLineEdit(self.kitsu_pass, window)
+        txt_FlapiKey.setFocusPolicy(QtCore.Qt.StrongFocus)
+        txt_FlapiKey.setMinimumSize(280, 28)
+        txt_FlapiKey.move(128,0)
+        txt_FlapiKey.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454}')
+        txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
+        txt_FlapiKey.textChanged.connect(txt_FlapiKey_textChanged)
+
+        flapi_hbox2.addWidget(lbl_FlapiKey)
+        flapi_hbox2.addWidget(txt_FlapiKey)
+        flapi_vbox1.addLayout(flapi_hbox2)
+
+        flapi_hbox3 = QtWidgets.QHBoxLayout()
+
+        lbl_FlapiStatus = QtWidgets.QLabel('Connected: ', window)
+        lbl_FlapiStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiStatus.setFixedHeight(28)
+        lbl_FlapiStatus.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+        flapi_connect_btn = QtWidgets.QPushButton('Connect', window)
+        flapi_connect_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
+        flapi_connect_btn.setMinimumSize(100, 28)
+        flapi_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
+                                'QPushButton:pressed {font:italic; color: #d9d9d9}')
+        flapi_connect_btn.clicked.connect(txt_FlapiConnect_Clicked)
+        # kitsu_connect_btn.setDefault(True)
+
+        flapi_hbox3.addWidget(lbl_FlapiStatus)
+        flapi_hbox3.addWidget(flapi_connect_btn)
+        flapi_vbox1.addLayout(flapi_hbox3)
 
         vbox = QtWidgets.QVBoxLayout()
         vbox.setMargin(20)
         vbox.addLayout(vbox1)
-        vbox.addLayout(vbox2)
+        vbox.addLayout(flapi_vbox1)
 
         window.setLayout(vbox)
 
