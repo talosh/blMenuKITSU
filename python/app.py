@@ -1,7 +1,7 @@
 import os
 import sys
 import base64
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtGui, QtWidgets, QtCore
 
 from pprint import pprint, pformat
 
@@ -69,6 +69,18 @@ class blMenuKITSU(QtWidgets.QApplication):
 
         def txt_FlapiConnect_Clicked():
             flapi_connect_btn.setText('Disconnect')
+
+        def toggle_kitsu_password_visibility():
+            if txt_KitsuPass.echoMode() == QtWidgets.QLineEdit.Password:
+                txt_KitsuPass.setEchoMode(QtWidgets.QLineEdit.Normal)
+            else:
+                txt_KitsuPass.setEchoMode(QtWidgets.QLineEdit.Password)
+
+        def toggle_flapikey_visibility():
+            if txt_FlapiKey.echoMode() == QtWidgets.QLineEdit.Password:
+                txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Normal)
+            else:
+                txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
 
         # window = QtWidgets.QWidget()
         window = FramelessWindow()
@@ -138,6 +150,10 @@ class blMenuKITSU(QtWidgets.QApplication):
         txt_KitsuPass.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454}')
         txt_KitsuPass.setEchoMode(QtWidgets.QLineEdit.Password)
         txt_KitsuPass.textChanged.connect(txt_KitsuPass_textChanged)
+        kitsu_pass_toggle_action = QtWidgets.QAction(window)
+        kitsu_pass_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
+        kitsu_pass_toggle_action.triggered.connect(toggle_kitsu_password_visibility)
+        txt_KitsuPass.addAction(kitsu_pass_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
 
         hbox3.addWidget(lbl_Pass)
         hbox3.addWidget(txt_KitsuPass)
@@ -212,6 +228,11 @@ class blMenuKITSU(QtWidgets.QApplication):
         txt_FlapiKey.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454}')
         txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
         txt_FlapiKey.textChanged.connect(txt_FlapiKey_textChanged)
+        flapikey_toggle_action = QtWidgets.QAction(window)
+        flapikey_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
+        flapikey_toggle_action.triggered.connect(toggle_flapikey_visibility)
+        txt_FlapiKey.addAction(flapikey_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
+
 
         flapi_hbox2.addWidget(lbl_FlapiKey)
         flapi_hbox2.addWidget(txt_FlapiKey)
