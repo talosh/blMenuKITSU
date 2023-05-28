@@ -262,9 +262,19 @@ class blMenuKITSU(QtWidgets.QApplication):
         vbox.addLayout(vbox1)
         vbox.addLayout(flapi_vbox1)
 
+        exit_btn = QtWidgets.QPushButton('Exit', window)
+        exit_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
+        exit_btn.setMinimumSize(100, 28)
+        exit_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
+                            'QPushButton:pressed {font:italic; color: #d9d9d9}')
+        exit_btn.clicked.connect(self.close_application)
+
+        vbox.addWidget(exit_btn)
+
         window.setLayout(vbox)
 
         return window
 
-
+    def close_application(self):
+        self.quit()
 
