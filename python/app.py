@@ -28,6 +28,8 @@ class FramelessWindow(QtWidgets.QWidget):
 class blMenuKITSU(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__([])
+
+        '''
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
 
@@ -41,8 +43,12 @@ class blMenuKITSU(QtWidgets.QApplication):
         encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
         if encoded_kitsu_pass:
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
+
+        # self.kitsu_connector = appKitsuConnector(self.framework)
+
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
         self.flapi_key = self.prefs.get('flapi_key', '')
+        '''
 
     def main_window(self):
 
