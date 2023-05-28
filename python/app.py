@@ -3,6 +3,8 @@ import sys
 import base64
 from PySide2 import QtGui, QtWidgets, QtCore
 
+from .kitsu import appKitsuConnector
+
 from pprint import pprint, pformat
 
 class FramelessWindow(QtWidgets.QWidget):
@@ -21,6 +23,8 @@ class FramelessWindow(QtWidgets.QWidget):
         if self._old_pos:
             delta = event.pos() - self._old_pos
             self.move(self.pos() + delta)
+
+            
 class blMenuKITSU(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__([])

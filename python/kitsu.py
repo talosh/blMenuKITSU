@@ -7,7 +7,7 @@ import re
 import traceback
 from pprint import pprint, pformat
 
-class flameKitsuConnector(object):
+class appKitsuConnector(object):
     def __init__(self, framework):
         self.name = self.__class__.__name__
         self.framework = framework
