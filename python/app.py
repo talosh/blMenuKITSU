@@ -1,7 +1,8 @@
 import os
 import sys
 import base64
-from PySide2 import QtGui, QtWidgets, QtCore
+import time
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 from .kitsu import appKitsuConnector
 
@@ -25,13 +26,12 @@ class FramelessWindow(QtWidgets.QWidget):
             self.move(self.pos() + delta)
 
             
-class blMenuKITSU(QtWidgets.QApplication):
+class blMenuKITSU(FramelessWindow):
     def __init__(self, *args, **kwargs):
-        super().__init__([])
-
-        '''
+        super().__init__()
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
+        self.kitsu_connector = appKitsuConnector(self.framework)
 
         self.user = None
         self.user_name = None
@@ -48,7 +48,12 @@ class blMenuKITSU(QtWidgets.QApplication):
 
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
         self.flapi_key = self.prefs.get('flapi_key', '')
-        '''
+        self.initUI()
+
+    def initUI(self):
+        self.main_window()
+        self.setStyleSheet("background-color: rgb(49, 49, 49);")
+        self.show()
 
     def main_window(self):
 
@@ -69,7 +74,8 @@ class blMenuKITSU(QtWidgets.QApplication):
             self.kitsu_pass_text = txt_KitsuPass.text()
 
         def txt_KitsuConnect_Clicked():
-            kitsu_connect_btn.setText('Disconnect')
+            kitsu_connect_btn.setText('Connecting')
+
 
         def txt_FlapiHost_textChanged():
             self.flapi_host_text = txt_KitsuPass.text()
@@ -93,7 +99,7 @@ class blMenuKITSU(QtWidgets.QApplication):
                 txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
 
         # window = QtWidgets.QWidget()
-        window = FramelessWindow()
+        window = self
         window.setWindowTitle(self.framework.app_name)
         window.setStyleSheet('background-color: #313131')
         window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -190,11 +196,13 @@ class blMenuKITSU(QtWidgets.QApplication):
         hbox4.addWidget(kitsu_connect_btn)
         vbox1.addLayout(hbox4)
 
+        '''
         hbox_spacer = QtWidgets.QHBoxLayout()
         lbl_spacer = QtWidgets.QLabel('', window)
         lbl_spacer.setMinimumHeight(8)
         hbox_spacer.addWidget(lbl_spacer)
         vbox1.addLayout(hbox_spacer)
+        '''
 
         # Flapi login box
         flapi_vbox1 = QtWidgets.QVBoxLayout()
@@ -268,7 +276,7 @@ class blMenuKITSU(QtWidgets.QApplication):
         flapi_vbox1.addLayout(flapi_hbox3)
 
         vbox = QtWidgets.QVBoxLayout()
-        vbox.setMargin(20)
+        vbox.setContentsMargins(20, 20, 20, 20)
         vbox.addLayout(vbox1)
         vbox.addLayout(flapi_vbox1)
 
@@ -281,10 +289,11 @@ class blMenuKITSU(QtWidgets.QApplication):
 
         vbox.addWidget(exit_btn)
 
-        window.setLayout(vbox)
+        self.setLayout(vbox)
 
         return window
 
     def close_application(self):
-        self.quit()
+        QtWidgets.QApplication.instance().quit()
+        # self.quit()
 
