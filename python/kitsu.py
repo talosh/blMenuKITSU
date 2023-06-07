@@ -5,6 +5,9 @@ import threading
 import inspect
 import re
 import traceback
+
+import gazu
+
 from pprint import pprint, pformat
 
 class appKitsuConnector(object):
@@ -12,8 +15,21 @@ class appKitsuConnector(object):
         self.name = self.__class__.__name__
         self.framework = framework
         self.app_name = framework.app_name
+        self.prefs = self.framework.prefs
         self.connector = self
         self.log('waking up')
+        self.gazu_client = None
+        self.user = None
+        self.user_name = None
+
+        try:
+            self.get_user()
+        except Exception as e:
+            pass
+            #  pprint (e)
+            # self.log_debug(pformat(e))
+
+
 
         '''
         self.prefs = self.framework.prefs_dict(self.framework.prefs, self.name)
@@ -31,7 +47,6 @@ class appKitsuConnector(object):
             self.gazu = gazu
             sys.path.pop(0)
 
-        self.gazu_client = None
 
         # defautl values are set here
         if not 'user signed out' in self.prefs_global.keys():
@@ -84,10 +99,10 @@ class appKitsuConnector(object):
         # get saved credentials
         import base64
         self.gazu_client = None
-        self.kitsu_host = self.prefs_user.get('kitsu_host', 'http://localhost/api/')
-        self.kitsu_user = self.prefs_user.get('kitsu_user', 'user@host')
+        self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
+        self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
         self.kitsu_pass = ''
-        encoded_kitsu_pass = self.prefs_user.get('kitsu_pass', '')
+        encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
         if encoded_kitsu_pass:
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
 
@@ -127,11 +142,11 @@ class appKitsuConnector(object):
                 login_status = login()
 
         # self.log_debug(pformat(self.user))
-        self.log_debug(self.user_name)
+        # self.log_debug(self.user_name)
 
-        self.prefs_user['kitsu_host'] = self.kitsu_host
-        self.prefs_user['kitsu_user'] = self.kitsu_user
-        self.prefs_user['kitsu_pass'] = base64.b64encode(self.kitsu_pass.encode("utf-8"))
+        self.prefs['kitsu_host'] = self.kitsu_host
+        self.prefs['kitsu_user'] = self.kitsu_user
+        self.prefs['kitsu_pass'] = base64.b64encode(self.kitsu_pass.encode("utf-8"))
         self.framework.save_prefs()
 
     def get_gazu_version(self):
