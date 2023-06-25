@@ -32,19 +32,20 @@ class blMenuKITSU(FramelessWindow):
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
         self.kitsu_connector = appKitsuConnector(self.framework)
+        if self.kitsu_connector.gazu_client:
+            self.kitsu_status = 'Connected'
+        else:
+            self.kitsu_status = 'Disconnected'
 
         self.user = None
         self.user_name = None
 
-        self.gazu_client = None
-        self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
+        self.kitsu_host = self.prefs.get('v', 'http://localhost/api/')
         self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
         self.kitsu_pass = ''
         encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
         if encoded_kitsu_pass:
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
-
-        # self.kitsu_connector = appKitsuConnector(self.framework)
 
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
         self.flapi_key = self.prefs.get('flapi_key', '')
@@ -74,7 +75,17 @@ class blMenuKITSU(FramelessWindow):
             self.kitsu_pass_text = txt_KitsuPass.text()
 
         def txt_KitsuConnect_Clicked():
-            kitsu_connect_btn.setText('Connecting')
+            if not self.kitsu_connector.gazu_client:
+                kitsu_connect_btn.setText('Connecting')
+                self.prefs['kitsu_host'] = self.kitsu_host_text
+                self.prefs['kitsu_user'] = self.kitsu_user_text
+                self.prefs['kitsu_pass'] = base64.b64encode(self.kitsu_pass_text.encode("utf-8")).decode("utf-8")
+                self.framework.save_prefs()
+                self.kitsu_connector.get_user(msg = True)
+                if self.kitsu_connector.gazu_client:
+                    self.kitsu_status = 'Connected'
+                else:
+                    self.kitsu_status = 'Disconnected'
 
 
         def txt_FlapiHost_textChanged():
@@ -178,8 +189,8 @@ class blMenuKITSU(FramelessWindow):
         vbox1.addLayout(hbox2)
         vbox1.addLayout(hbox3)
 
-        lbl_KitsuStatus = QtWidgets.QLabel('Connected: ', window)
-        lbl_KitsuStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_KitsuStatus = QtWidgets.QLabel(self.kitsu_status, window)
+        lbl_KitsuStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737; padding-left: 8px;}')
         lbl_KitsuStatus.setFixedHeight(28)
         lbl_KitsuStatus.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 

@@ -8,6 +8,8 @@ import traceback
 
 import gazu
 
+from PyQt5 import QtGui, QtWidgets, QtCore
+
 from pprint import pprint, pformat
 
 class appKitsuConnector(object):
@@ -19,8 +21,11 @@ class appKitsuConnector(object):
         self.connector = self
         self.log('waking up')
         self.gazu_client = None
+        self.gazu = gazu
         self.user = None
         self.user_name = None
+
+        self.mbox = QtWidgets.QMessageBox()
 
         try:
             self.get_user()
@@ -85,8 +90,6 @@ class appKitsuConnector(object):
             loop.daemon = True
             loop.start()
 
-        from PySide2 import QtWidgets
-        self.mbox = QtWidgets.QMessageBox()
         '''
 
     def log(self, message):
@@ -96,6 +99,9 @@ class appKitsuConnector(object):
         self.framework.log_debug('[' + self.name + '] ' + str(message))
 
     def get_user(self, *args, **kwargs):
+
+        msg = kwargs.get('msg')
+
         # get saved credentials
         import base64
         self.gazu_client = None
@@ -118,7 +124,8 @@ class appKitsuConnector(object):
                     host = host + ('/')
 
                 self.gazu_client = self.gazu.client.create_client(host)
-                self.gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
+                result = gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
+                pprint (result)
                 self.user = self.gazu.client.get_current_user(client = self.gazu_client)
                 self.user_name = self.user.get('full_name')
                 return True
@@ -128,7 +135,10 @@ class appKitsuConnector(object):
                     self.mbox.exec_()
             return False
 
-        login_status = login(msg=False)
+        login_status = login(msg)
+        return login_status
+
+        '''
         while not login_status:
             credentials = self.login_dialog()
             if not credentials:
@@ -140,14 +150,15 @@ class appKitsuConnector(object):
                 self.kitsu_user = credentials.get('user')
                 self.kitsu_pass = credentials.get('password', '')
                 login_status = login()
+        '''
 
         # self.log_debug(pformat(self.user))
         # self.log_debug(self.user_name)
 
-        self.prefs['kitsu_host'] = self.kitsu_host
-        self.prefs['kitsu_user'] = self.kitsu_user
-        self.prefs['kitsu_pass'] = base64.b64encode(self.kitsu_pass.encode("utf-8"))
-        self.framework.save_prefs()
+        # self.prefs['kitsu_host'] = self.kitsu_host
+        # self.prefs['kitsu_user'] = self.kitsu_user
+        # self.prefs['kitsu_pass'] = base64.b64encode(self.kitsu_pass.encode("utf-8"))
+        # self.framework.save_prefs()
 
     def get_gazu_version(self):
         if not self.gazu:
