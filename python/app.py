@@ -12,7 +12,10 @@ from pprint import pprint, pformat
 class FramelessWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setWindowFlags(
+                QtCore.Qt.Window | QtCore.Qt.Tool 
+            )
+        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self._old_pos = None
 
     def mousePressEvent(self, event):
@@ -26,7 +29,14 @@ class FramelessWindow(QtWidgets.QWidget):
             delta = event.pos() - self._old_pos
             self.move(self.pos() + delta)
 
-            
+    def closeEvent(self, event):
+        event.accept()  # let the window close
+        self.close_application()
+
+    def close_application(self):
+        QtWidgets.QApplication.instance().quit()
+        # self.quit()
+
 class blMenuKITSU(FramelessWindow):
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -132,7 +142,35 @@ class blMenuKITSU(FramelessWindow):
         window.setMinimumSize(450, 180)
         screen_res = QtWidgets.QDesktopWidget().screenGeometry()
         window.move((screen_res.width()/2)-150, (screen_res.height() / 2)-180)
-        # window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+
+        '''
+        main_vbox = QtWidgets.QVBoxLayout(window)
+        main_vbox.setSpacing(0)
+        main_vbox.setContentsMargins(0, 0, 0, 0)
+
+        # Create a new widget for the stripe at the top
+        self.stripe_widget = QtWidgets.QWidget(window)
+        self.stripe_widget.setStyleSheet("background-color: #474747;")
+        self.stripe_widget.setFixedHeight(24)  # Adjust this value to change the height of the stripe
+
+        # Create a label inside the stripe widget
+        self.stripe_label = QtWidgets.QLabel("Your text here")  # Replace this with the text you want on the stripe
+        self.stripe_label.setStyleSheet("color: #cbcbcb;")  # Change this to set the text color
+
+        # Create a layout for the stripe widget and add the label to it
+        stripe_layout = QtWidgets.QHBoxLayout()
+        stripe_layout.addWidget(self.stripe_label)
+        stripe_layout.addStretch(1)
+        stripe_layout.setContentsMargins(18, 0, 0, 0)  # This will ensure the label fills the stripe widget
+
+        # Set the layout to stripe_widget
+        self.stripe_widget.setLayout(stripe_layout)
+
+        # Add the stripe widget to the top of the main window's layout
+        main_vbox.addWidget(self.stripe_widget)
+        main_vbox.addSpacing(4)  # Add a 4-pixel space
+        main_vbox.setContentsMargins(20, 20, 20, 20)
+        '''
 
         vbox1 = QtWidgets.QVBoxLayout()
 
@@ -304,7 +342,7 @@ class blMenuKITSU(FramelessWindow):
         flapi_hbox3.addWidget(flapi_connect_btn)
         flapi_vbox1.addLayout(flapi_hbox3)
 
-        vbox = QtWidgets.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout(window)
         vbox.setContentsMargins(20, 20, 20, 20)
         vbox.addLayout(vbox1)
         vbox.addLayout(flapi_vbox1)
@@ -318,11 +356,7 @@ class blMenuKITSU(FramelessWindow):
 
         vbox.addWidget(exit_btn)
 
+        # main_vbox.addLayout(vbox)
         self.setLayout(vbox)
 
         return window
-
-    def close_application(self):
-        QtWidgets.QApplication.instance().quit()
-        # self.quit()
-
