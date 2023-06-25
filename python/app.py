@@ -5,6 +5,7 @@ import time
 from PyQt5 import QtGui, QtWidgets, QtCore
 
 from .kitsu import appKitsuConnector
+from .baselight import appBaselightConnector
 
 from pprint import pprint, pformat
 
@@ -40,16 +41,20 @@ class blMenuKITSU(FramelessWindow):
         self.user = None
         self.user_name = None
 
-        self.kitsu_host = self.prefs.get('v', 'http://localhost/api/')
+        self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
         self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
         self.kitsu_pass = ''
         encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
         if encoded_kitsu_pass:
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
 
+        self.bl_connector = appBaselightConnector(self.framework)
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
         self.flapi_key = self.prefs.get('flapi_key', '')
         self.initUI()
+
+        self.kitsu_connect_btn.click()
+        self.flapi_connect_btn.click()
 
     def initUI(self):
         self.main_window()
@@ -76,7 +81,7 @@ class blMenuKITSU(FramelessWindow):
 
         def txt_KitsuConnect_Clicked():
             if not self.kitsu_connector.gazu_client:
-                kitsu_connect_btn.setText('Connecting')
+                lbl_KitsuStatus.setText('Connecting...')
                 self.prefs['kitsu_host'] = self.kitsu_host_text
                 self.prefs['kitsu_user'] = self.kitsu_user_text
                 self.prefs['kitsu_pass'] = base64.b64encode(self.kitsu_pass_text.encode("utf-8")).decode("utf-8")
@@ -84,9 +89,19 @@ class blMenuKITSU(FramelessWindow):
                 self.kitsu_connector.get_user(msg = True)
                 if self.kitsu_connector.gazu_client:
                     self.kitsu_status = 'Connected'
+                    lbl_KitsuStatus.setText(self.kitsu_status)
+                    kitsu_connect_btn.setText('Disconnect')
                 else:
                     self.kitsu_status = 'Disconnected'
-
+                    kitsu_connect_btn.setText('Connect')
+                    lbl_KitsuStatus.setText(self.kitsu_status)
+            else:
+                self.kitsu_connector.gazu_client = None
+                self.kitsu_connector.user = None
+                self.kitsu_connector.user_name = None
+                self.kitsu_status = 'Disconnected'
+                lbl_KitsuStatus.setText(self.kitsu_status)
+                kitsu_connect_btn.setText('Connect')
 
         def txt_FlapiHost_textChanged():
             self.flapi_host_text = txt_KitsuPass.text()
@@ -200,7 +215,9 @@ class blMenuKITSU(FramelessWindow):
         kitsu_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         kitsu_connect_btn.clicked.connect(txt_KitsuConnect_Clicked)
-        # kitsu_connect_btn.setDefault(True)
+        if self.kitsu_connector.gazu_client:
+            kitsu_connect_btn.setText('Disconnect')
+        self.kitsu_connect_btn = kitsu_connect_btn
 
         hbox4 = QtWidgets.QHBoxLayout()
         hbox4.addWidget(lbl_KitsuStatus)
@@ -280,6 +297,7 @@ class blMenuKITSU(FramelessWindow):
         flapi_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         flapi_connect_btn.clicked.connect(txt_FlapiConnect_Clicked)
+        self.flapi_connect_btn = flapi_connect_btn
         # kitsu_connect_btn.setDefault(True)
 
         flapi_hbox3.addWidget(lbl_FlapiStatus)

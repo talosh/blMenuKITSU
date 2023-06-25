@@ -27,14 +27,14 @@ class appKitsuConnector(object):
 
         self.mbox = QtWidgets.QMessageBox()
 
+        '''    
         try:
             self.get_user()
         except Exception as e:
             pass
             #  pprint (e)
             # self.log_debug(pformat(e))
-
-
+        '''
 
         '''
         self.prefs = self.framework.prefs_dict(self.framework.prefs, self.name)
@@ -122,14 +122,17 @@ class appKitsuConnector(object):
                         host = host + '/api/'
                 elif host.endswith('/api'):
                     host = host + ('/')
-
+                
                 self.gazu_client = self.gazu.client.create_client(host)
                 result = gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
-                pprint (result)
                 self.user = self.gazu.client.get_current_user(client = self.gazu_client)
                 self.user_name = self.user.get('full_name')
+                print (self.user_name)
                 return True
             except Exception as e:
+                self.gazu_client = None
+                self.user = None
+                self.user_name = None
                 if msg:
                     self.mbox.setText(pformat(e))
                     self.mbox.exec_()
