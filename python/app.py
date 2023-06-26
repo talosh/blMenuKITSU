@@ -1,6 +1,7 @@
 import os
 import sys
 import base64
+import getpass
 import time
 from PyQt5 import QtGui, QtWidgets, QtCore
 
@@ -60,11 +61,17 @@ class blMenuKITSU(FramelessWindow):
 
         self.bl_connector = appBaselightConnector(self.framework)
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
+        self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
         self.flapi_key = self.prefs.get('flapi_key', '')
+        if self.bl_connector.conn:
+            self.bl_status = 'Connected'
+        else:
+            self.bl_status = 'Disconnected'
+
         self.initUI()
 
-        self.kitsu_connect_btn.click()
-        self.flapi_connect_btn.click()
+        # self.kitsu_connect_btn.click()
+        # self.flapi_connect_btn.click()
 
     def initUI(self):
         self.main_window()
@@ -77,7 +84,14 @@ class blMenuKITSU(FramelessWindow):
         self.kitsu_user_text = self.kitsu_user
         self.kitsu_pass_text = self.kitsu_pass
         self.flapi_host_text = self.flapi_host
+        self.flapi_user_text = self.flapi_user
         self.flapi_key_text = self.flapi_key
+
+        def setLabelColour(label):
+            if label.text() == 'Connected':
+                label.setStyleSheet('QFrame {color: #449800; background-color: #373737; padding-left: 8px;}')
+            else:
+                label.setStyleSheet('QFrame {color: #994400; background-color: #373737; padding-left: 8px;}')
 
         def txt_KitsuHost_textChanged():
             self.kitsu_host_text = txt_KitsuHost.text()
@@ -112,15 +126,39 @@ class blMenuKITSU(FramelessWindow):
                 self.kitsu_status = 'Disconnected'
                 lbl_KitsuStatus.setText(self.kitsu_status)
                 kitsu_connect_btn.setText('Connect')
+            setLabelColour(lbl_KitsuStatus)
 
         def txt_FlapiHost_textChanged():
-            self.flapi_host_text = txt_KitsuPass.text()
+            self.flapi_host_text = txt_FlapiHost.text()
+
+        def txt_FlapiUser_textChanged():
+            self.flapi_user_text = txt_FlapiUser.text()
 
         def txt_FlapiKey_textChanged():
             self.flapi_key_text = txt_FlapiKey.text()
 
         def txt_FlapiConnect_Clicked():
-            flapi_connect_btn.setText('Disconnect')
+            if not self.bl_connector.conn:
+                flapi_connect_btn.setText('Connecting...')
+                self.prefs['flapi_host'] = self.flapi_host_text
+                self.prefs['flapi_user'] = self.flapi_user_text
+                self.prefs['flapi_key'] = self.flapi_key_text
+                self.framework.save_prefs()
+                self.bl_connector.fl_connect(msg = True)
+                if self.bl_connector.conn:
+                    self.bl_status = 'Connected'
+                    lbl_FlapiStatus.setText(self.bl_status)
+                    flapi_connect_btn.setText('Disconnect')
+                else:
+                    self.bl_status = 'Disconnected'
+                    flapi_connect_btn.setText('Connect')
+                    lbl_FlapiStatus.setText(self.bl_status)
+            else:
+                self.bl_connector.fl_disconnect(msg = True)
+                self.bl_status = 'Disconnected'
+                lbl_FlapiStatus.setText(self.bl_status)
+                flapi_connect_btn.setText('Connect')
+            setLabelColour(lbl_FlapiStatus)
 
         def toggle_kitsu_password_visibility():
             if txt_KitsuPass.echoMode() == QtWidgets.QLineEdit.Password:
@@ -243,7 +281,8 @@ class blMenuKITSU(FramelessWindow):
         vbox1.addLayout(hbox3)
 
         lbl_KitsuStatus = QtWidgets.QLabel(self.kitsu_status, window)
-        lbl_KitsuStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737; padding-left: 8px;}')
+        setLabelColour(lbl_KitsuStatus)
+        # lbl_KitsuStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737; padding-left: 8px;}')
         lbl_KitsuStatus.setFixedHeight(28)
         lbl_KitsuStatus.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
@@ -273,7 +312,7 @@ class blMenuKITSU(FramelessWindow):
         # Flapi login box
         flapi_vbox1 = QtWidgets.QVBoxLayout()
 
-        lbl_Flapi = QtWidgets.QLabel('Flapi Server: ', window)
+        lbl_Flapi = QtWidgets.QLabel('Baselight Flapi Server Login: ', window)
         lbl_Flapi.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
         lbl_Flapi.setFixedHeight(28)
         lbl_Flapi.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
@@ -297,15 +336,34 @@ class blMenuKITSU(FramelessWindow):
         flapi_hbox1.addWidget(lbl_FlapiHost)
         flapi_hbox1.addWidget(txt_FlapiHost)
         flapi_vbox1.addLayout(flapi_hbox1)
-        
+
         flapi_hbox2 = QtWidgets.QHBoxLayout()
+        lbl_FlapiUser = QtWidgets.QLabel('User: ', window)
+        lbl_FlapiUser.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiUser.setFixedSize(108, 28)
+        lbl_FlapiUser.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+        txt_FlapiUser = QtWidgets.QLineEdit(self.flapi_user, window)
+        txt_FlapiUser.setFocusPolicy(QtCore.Qt.StrongFocus)
+        txt_FlapiUser.setMinimumSize(280, 28)
+        # txt_KitsuHost.move(128,0)
+        txt_FlapiUser.setStyleSheet(
+            'QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454;}'
+            )
+        txt_FlapiUser.textChanged.connect(txt_FlapiUser_textChanged)
+
+        flapi_hbox2.addWidget(lbl_FlapiUser)
+        flapi_hbox2.addWidget(txt_FlapiUser)
+        flapi_vbox1.addLayout(flapi_hbox2)
+
+        flapi_hbox3 = QtWidgets.QHBoxLayout()
 
         lbl_FlapiKey = QtWidgets.QLabel('API Key: ', window)
         lbl_FlapiKey.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
         lbl_FlapiKey.setFixedSize(108, 28)
         lbl_FlapiKey.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_FlapiKey = QtWidgets.QLineEdit(self.kitsu_pass, window)
+        txt_FlapiKey = QtWidgets.QLineEdit(self.flapi_key, window)
         txt_FlapiKey.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_FlapiKey.setMinimumSize(280, 28)
         txt_FlapiKey.move(128,0)
@@ -318,14 +376,15 @@ class blMenuKITSU(FramelessWindow):
         txt_FlapiKey.addAction(flapikey_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
 
 
-        flapi_hbox2.addWidget(lbl_FlapiKey)
-        flapi_hbox2.addWidget(txt_FlapiKey)
-        flapi_vbox1.addLayout(flapi_hbox2)
+        flapi_hbox3.addWidget(lbl_FlapiKey)
+        flapi_hbox3.addWidget(txt_FlapiKey)
+        flapi_vbox1.addLayout(flapi_hbox3)
 
         flapi_hbox3 = QtWidgets.QHBoxLayout()
 
-        lbl_FlapiStatus = QtWidgets.QLabel('Connected: ', window)
-        lbl_FlapiStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiStatus = QtWidgets.QLabel(self.bl_status, window)
+        setLabelColour(lbl_FlapiStatus)
+        # lbl_FlapiStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
         lbl_FlapiStatus.setFixedHeight(28)
         lbl_FlapiStatus.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
@@ -335,7 +394,10 @@ class blMenuKITSU(FramelessWindow):
         flapi_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         flapi_connect_btn.clicked.connect(txt_FlapiConnect_Clicked)
+        if self.bl_connector.conn:
+            flapi_connect_btn.setText('Disconnect')
         self.flapi_connect_btn = flapi_connect_btn
+        
         # kitsu_connect_btn.setDefault(True)
 
         flapi_hbox3.addWidget(lbl_FlapiStatus)
@@ -360,3 +422,8 @@ class blMenuKITSU(FramelessWindow):
         self.setLayout(vbox)
 
         return window
+
+    def close_application(self):
+        self.bl_connector.fl_disconnect()
+        QtWidgets.QApplication.instance().quit()
+        # self.quit()

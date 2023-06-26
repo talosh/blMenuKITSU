@@ -26,6 +26,7 @@ class appKitsuConnector(object):
         self.user_name = None
 
         self.mbox = QtWidgets.QMessageBox()
+        self.get_user()
 
         '''    
         try:
@@ -127,7 +128,7 @@ class appKitsuConnector(object):
                 result = gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
                 self.user = self.gazu.client.get_current_user(client = self.gazu_client)
                 self.user_name = self.user.get('full_name')
-                print (self.user_name)
+                self.log_debug('connected to kitsu as %s' % self.user_name)
                 return True
             except Exception as e:
                 self.gazu_client = None
