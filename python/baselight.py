@@ -5,6 +5,7 @@ import threading
 import inspect
 import re
 import traceback
+import getpass
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 
@@ -21,6 +22,11 @@ class appBaselightConnector(object):
 
         self.log('waking up')
         self.flapi = self.import_flapi()
+        self.flapi_host = self.prefs.get('flapi_host', 'localhost')
+        self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+        self.flapi_key = self.prefs.get('flapi_key', '')
+        self.conn = None
+        self.fl_connect()
     
     def log(self, message):
         self.framework.log('[' + self.name + '] ' + str(message))
@@ -32,6 +38,7 @@ class appBaselightConnector(object):
         flapi_module_path = '/Applications/Baselight/Current/Utilities/Resources/share/flapi/python/flapi'
         if not os.path.isdir(flapi_module_path):
             from . import flapi
+            return flapi
         else:
             self.log_debug('importing flapi from %s' % flapi_module_path)
             try:
@@ -43,3 +50,47 @@ class appBaselightConnector(object):
                 msg = f'unable to import filmlight api python module from: {flapi_module_path}\n'
                 self.mbox.setText(msg + pformat(e))
                 self.mbox.exec_()
+
+    def fl_connect(self, *args, **kwargs):
+        msg = kwargs.get('msg')
+        flapi = self.flapi
+        self.log_debug('opening flapi connection to %s' % self.flapi_host)
+        self.log_debug('flapi user: %s' % self.flapi_user)
+        self.log_debug('flapi token: %s' % self.flapi_key)
+
+        try:
+            self.conn = flapi.Connection(
+                self.flapi_host,
+                username=self.flapi_user,
+                token=self.flapi_key
+            )
+            self.conn.connect()
+        except flapi.FLAPIException as e:
+            if msg:
+                self.mbox.setText(pformat(e))
+                self.mbox.exec_()
+            self.conn = None
+        except Exception as e:
+            if msg:
+                self.mbox.setText(pformat(e))
+                self.mbox.exec_()
+            self.conn = None
+        self.log_debug('connected to %s' % self.flapi_host)
+
+    def fl_disconnect(self, *args, **kwargs):
+        msg = kwargs.get('msg')
+        flapi = self.flapi
+        try:
+            self.conn.close()
+            self.conn = None
+        except flapi.FLAPIException as e:
+            if msg:
+                self.mbox.setText(pformat(e))
+                self.mbox.exec_()
+            self.conn = None
+        except Exception as e:
+            if msg:
+                self.mbox.setText(pformat(e))
+                self.mbox.exec_()
+            self.conn = None
+        self.log_debug('disconnected from %s' % self.flapi_host)
