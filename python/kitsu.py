@@ -12,6 +12,11 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 
 from pprint import pprint, pformat
 
+class KitsuConnectionError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
 class appKitsuConnector(object):
     def __init__(self, framework):
         self.name = self.__class__.__name__
@@ -25,7 +30,8 @@ class appKitsuConnector(object):
         self.user = None
         self.user_name = None
 
-        self.mbox = QtWidgets.QMessageBox()
+        self.mbox = self.framework.mbox
+        # self.mbox = QtWidgets.QMessageBox()
         self.get_user()
 
         '''    
@@ -125,6 +131,8 @@ class appKitsuConnector(object):
                     host = host + ('/')
                 
                 self.gazu_client = self.gazu.client.create_client(host)
+                if not self.gazu.client.host_is_up(client = self.gazu_client):
+                    raise KitsuConnectionError(f'Host {host} is unreachable')
                 result = gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
                 self.user = self.gazu.client.get_current_user(client = self.gazu_client)
                 self.user_name = self.user.get('full_name')

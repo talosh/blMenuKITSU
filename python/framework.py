@@ -97,7 +97,8 @@ class AppFramework(object):
         )
 
         self.log('[%s] waking up' % self.__class__.__name__)
-        self.load_prefs()
+        # self.load_prefs()
+        self.mbox = self.setup_message_box()
 
     def log(self, message):
         try:
@@ -120,7 +121,7 @@ class AppFramework(object):
 
         try:
             with open(prefs_file_path, 'r') as prefs_file:
-                self.prefs = json.load(prefs_file)
+                self.prefs.update(json.load(prefs_file))
             self.log_debug('preferences loaded from %s' % prefs_file_path)
             self.log_debug('preferences contents:\n' + json.dumps(self.prefs, indent=4))
         except Exception as e:
@@ -166,3 +167,29 @@ class AppFramework(object):
 
         result = exp.sub('_', stripped_name)
         return re.sub('_\_+', '_', result)
+
+    def setup_message_box(self):
+        from PyQt5 import QtGui, QtWidgets, QtCore
+        mbox = QtWidgets.QMessageBox()
+        mbox.setWindowFlags(QtCore.Qt.Tool)
+        mbox.setStyleSheet("""
+            QMessageBox {
+                background-color: #313131;
+                color: #9a9a9a;
+                text-align: center;
+            }
+            QMessageBox QPushButton {
+                width: 80px;
+                height: 24px;
+                color: #9a9a9a;
+                background-color: #424142;
+                border-top: 1px inset #555555;
+                border-bottom: 1px inset black
+            }
+            QMessageBox QPushButton:pressed {
+                font:italic;
+                color: #d9d9d9
+            }
+        """)
+        return mbox
+
