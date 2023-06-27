@@ -18,7 +18,7 @@ class appBaselightConnector(object):
         self.app_name = framework.app_name
         self.prefs = self.framework.prefs
         self.connector = self
-        self.mbox = QtWidgets.QMessageBox()
+        self.mbox = self.framework.mbox
 
         self.log('waking up')
         self.flapi = self.import_flapi()
@@ -65,6 +65,8 @@ class appBaselightConnector(object):
                 token=self.flapi_key
             )
             self.conn.connect()
+            jobs = self.conn.JobManager.get_jobs(self.flapi_host)
+            self.log_debug('connected to %s' % self.flapi_host)
         except flapi.FLAPIException as e:
             if msg:
                 self.mbox.setText(pformat(e))
@@ -75,7 +77,6 @@ class appBaselightConnector(object):
                 self.mbox.setText(pformat(e))
                 self.mbox.exec_()
             self.conn = None
-        self.log_debug('connected to %s' % self.flapi_host)
 
     def fl_disconnect(self, *args, **kwargs):
         msg = kwargs.get('msg')

@@ -39,59 +39,130 @@ class FramelessWindow(QtWidgets.QWidget):
         # self.quit()
 
 class blMenuKITSU(FramelessWindow):
+    # Define a custom signal
+    allEventsProcessed = QtCore.pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
-        self.kitsu_connector = appKitsuConnector(self.framework)
-        if self.kitsu_connector.gazu_client:
-            self.kitsu_status = 'Connected'
-        else:
-            self.kitsu_status = 'Disconnected'
 
-        self.user = None
-        self.user_name = None
+        # set intermediate status
+        self.kitsu_status = 'Ilde'
+        self.bl_status = 'Idle'
 
+        self.kitsu_connector = None
+        self.bl_connector = None
+
+        # Connect the signal to the slot
+        self.allEventsProcessed.connect(self.on_allEventsProcessed)
+        # A flag to check if all events have been processed
+        self.allEventsFlag = False
+
+        self.main_window()
+        self.setStyleSheet("background-color: rgb(49, 49, 49);")
+        self.show()
+
+        QtCore.QTimer.singleShot(0, self.after_show)
+
+        # self.kitsu_connect_btn.click()
+        # self.flapi_connect_btn.click()
+
+    def processEvents(self):
+        QtWidgets.QApplication.instance().processEvents()
+        self.allEventsProcessed.emit()
+        while not self.allEventsFlag:
+            time.sleep(0.01)
+
+    def on_allEventsProcessed(self):
+        self.allEventsFlag = True
+
+    def after_show(self):
+        self.framework.load_prefs()
         self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
         self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
         self.kitsu_pass = ''
         encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
         if encoded_kitsu_pass:
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
-
-        self.bl_connector = appBaselightConnector(self.framework)
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
         self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
         self.flapi_key = self.prefs.get('flapi_key', '')
+        
+        self.UI_txt_KitsuHost.setText(self.kitsu_host)
+        self.UI_txt_KitsuUser.setText(self.kitsu_user)
+        self.UI_txt_KitsuPass.setText(self.kitsu_pass)
+        self.UI_txt_FlapiHost.setText(self.flapi_host)
+        self.UI_txt_FlapiUser.setText(self.flapi_user)
+        self.UI_txt_FlapiKey.setText(self.flapi_key)
+
+        self.UI_lbl_KitsuStatus.setText('Connecting...')
+        self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
+        self.processEvents()
+
+        self.kitsu_connector = appKitsuConnector(self.framework)
+
+        if self.kitsu_connector.user:
+            self.kitsu_status = 'Connected'
+            self.UI_lbl_KitsuStatus.setText('Connected')
+            self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
+            self.UI_kitsu_connect_btn.setText('Disconnect')
+        else:
+            self.kitsu_status = 'Disconnected'
+            self.UI_lbl_KitsuStatus.setText('Disconnected')
+            self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
+            self.UI_kitsu_connect_btn.setText('Connect')
+
+        self.processEvents()
+
+        self.UI_lbl_FlapiStatus.setText('Connecting...')
+        self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
+        self.processEvents()
+
+        self.bl_connector = appBaselightConnector(self.framework)
+
         if self.bl_connector.conn:
             self.bl_status = 'Connected'
+            self.UI_lbl_FlapiStatus.setText('Connected')
+            self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
+            self.UI_flapi_connect_btn.setText('Disconnect')
         else:
             self.bl_status = 'Disconnected'
-
-        self.initUI()
-
-        # self.kitsu_connect_btn.click()
-        # self.flapi_connect_btn.click()
-
-    def initUI(self):
-        self.main_window()
-        self.setStyleSheet("background-color: rgb(49, 49, 49);")
-        self.show()
+            self.UI_lbl_FlapiStatus.setText('Disconnected')
+            self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
+            self.UI_flapi_connect_btn.setText('Connect')
+        self.processEvents()
 
     def main_window(self):
 
+        QtWidgets.QApplication.instance().setStyleSheet("QLabel { color :  #999999; }")
+        
+        '''
         self.kitsu_host_text = self.kitsu_host
         self.kitsu_user_text = self.kitsu_user
         self.kitsu_pass_text = self.kitsu_pass
         self.flapi_host_text = self.flapi_host
         self.flapi_user_text = self.flapi_user
         self.flapi_key_text = self.flapi_key
+        '''
+
+        self.kitsu_host_text = ''
+        self.kitsu_user_text = ''
+        self.kitsu_pass_text = ''
+        self.flapi_host_text = ''
+        self.flapi_user_text = ''
+        self.flapi_key_text = ''
 
         def setLabelColour(label):
             if label.text() == 'Connected':
                 label.setStyleSheet('QFrame {color: #449800; background-color: #373737; padding-left: 8px;}')
-            else:
+            elif label.text() == 'Connecting...':
+                label.setStyleSheet('QFrame {color: #889800; background-color: #373737; padding-left: 8px;}')
+            elif label.text() == 'Disconnected':
                 label.setStyleSheet('QFrame {color: #994400; background-color: #373737; padding-left: 8px;}')
+            else:
+                label.setStyleSheet('QFrame {color: #989898; background-color: #373737; padding-left: 8px;}')
+        self.UI_setLabelColour = setLabelColour
 
         def txt_KitsuHost_textChanged():
             self.kitsu_host_text = txt_KitsuHost.text()
@@ -225,7 +296,7 @@ class blMenuKITSU(FramelessWindow):
         lbl_Host.setFixedSize(108, 28)
         lbl_Host.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_KitsuHost = QtWidgets.QLineEdit(self.kitsu_host, window)
+        txt_KitsuHost = QtWidgets.QLineEdit(self.kitsu_host_text, window)
         txt_KitsuHost.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_KitsuHost.setMinimumSize(280, 28)
         # txt_KitsuHost.move(128,0)
@@ -233,6 +304,7 @@ class blMenuKITSU(FramelessWindow):
             'QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454;}'
             )
         txt_KitsuHost.textChanged.connect(txt_KitsuHost_textChanged)
+        self.UI_txt_KitsuHost = txt_KitsuHost
 
         hbox1.addWidget(lbl_Host)
         hbox1.addWidget(txt_KitsuHost)
@@ -244,12 +316,13 @@ class blMenuKITSU(FramelessWindow):
         lbl_User.setFixedSize(108, 28)
         lbl_User.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_KitsuUser = QtWidgets.QLineEdit(self.kitsu_user, window)
+        txt_KitsuUser = QtWidgets.QLineEdit(self.kitsu_user_text, window)
         txt_KitsuUser.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_KitsuUser.setMinimumSize(280, 28)
         txt_KitsuUser.move(128,0)
         txt_KitsuUser.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454}')
         txt_KitsuUser.textChanged.connect(txt_KitsuUser_textChanged)
+        self.UI_txt_KitsuUser = txt_KitsuUser
 
         hbox2.addWidget(lbl_User)
         hbox2.addWidget(txt_KitsuUser)
@@ -261,7 +334,7 @@ class blMenuKITSU(FramelessWindow):
         lbl_Pass.setFixedSize(108, 28)
         lbl_Pass.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_KitsuPass = QtWidgets.QLineEdit(self.kitsu_pass, window)
+        txt_KitsuPass = QtWidgets.QLineEdit(self.kitsu_pass_text, window)
         txt_KitsuPass.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_KitsuPass.setMinimumSize(280, 28)
         txt_KitsuPass.move(128,0)
@@ -272,6 +345,7 @@ class blMenuKITSU(FramelessWindow):
         kitsu_pass_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
         kitsu_pass_toggle_action.triggered.connect(toggle_kitsu_password_visibility)
         txt_KitsuPass.addAction(kitsu_pass_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
+        self.UI_txt_KitsuPass = txt_KitsuPass
 
         hbox3.addWidget(lbl_Pass)
         hbox3.addWidget(txt_KitsuPass)
@@ -285,6 +359,7 @@ class blMenuKITSU(FramelessWindow):
         # lbl_KitsuStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737; padding-left: 8px;}')
         lbl_KitsuStatus.setFixedHeight(28)
         lbl_KitsuStatus.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.UI_lbl_KitsuStatus = lbl_KitsuStatus
 
         kitsu_connect_btn = QtWidgets.QPushButton('Connect', window)
         kitsu_connect_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -292,9 +367,9 @@ class blMenuKITSU(FramelessWindow):
         kitsu_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         kitsu_connect_btn.clicked.connect(txt_KitsuConnect_Clicked)
-        if self.kitsu_connector.gazu_client:
+        if self.kitsu_status != 'Disconnected':
             kitsu_connect_btn.setText('Disconnect')
-        self.kitsu_connect_btn = kitsu_connect_btn
+        self.UI_kitsu_connect_btn = kitsu_connect_btn
 
         hbox4 = QtWidgets.QHBoxLayout()
         hbox4.addWidget(lbl_KitsuStatus)
@@ -324,7 +399,7 @@ class blMenuKITSU(FramelessWindow):
         lbl_FlapiHost.setFixedSize(108, 28)
         lbl_FlapiHost.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_FlapiHost = QtWidgets.QLineEdit(self.flapi_host, window)
+        txt_FlapiHost = QtWidgets.QLineEdit(self.flapi_host_text, window)
         txt_FlapiHost.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_FlapiHost.setMinimumSize(280, 28)
         # txt_KitsuHost.move(128,0)
@@ -332,6 +407,8 @@ class blMenuKITSU(FramelessWindow):
             'QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454;}'
             )
         txt_FlapiHost.textChanged.connect(txt_FlapiHost_textChanged)
+        txt_FlapiHost.textChanged.connect(txt_FlapiHost_textChanged)
+        self.UI_txt_FlapiHost = txt_FlapiHost
 
         flapi_hbox1.addWidget(lbl_FlapiHost)
         flapi_hbox1.addWidget(txt_FlapiHost)
@@ -343,7 +420,7 @@ class blMenuKITSU(FramelessWindow):
         lbl_FlapiUser.setFixedSize(108, 28)
         lbl_FlapiUser.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_FlapiUser = QtWidgets.QLineEdit(self.flapi_user, window)
+        txt_FlapiUser = QtWidgets.QLineEdit(self.flapi_user_text, window)
         txt_FlapiUser.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_FlapiUser.setMinimumSize(280, 28)
         # txt_KitsuHost.move(128,0)
@@ -351,6 +428,7 @@ class blMenuKITSU(FramelessWindow):
             'QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454;}'
             )
         txt_FlapiUser.textChanged.connect(txt_FlapiUser_textChanged)
+        self.UI_txt_FlapiUser = txt_FlapiUser
 
         flapi_hbox2.addWidget(lbl_FlapiUser)
         flapi_hbox2.addWidget(txt_FlapiUser)
@@ -363,7 +441,7 @@ class blMenuKITSU(FramelessWindow):
         lbl_FlapiKey.setFixedSize(108, 28)
         lbl_FlapiKey.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_FlapiKey = QtWidgets.QLineEdit(self.flapi_key, window)
+        txt_FlapiKey = QtWidgets.QLineEdit(self.flapi_key_text, window)
         txt_FlapiKey.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_FlapiKey.setMinimumSize(280, 28)
         txt_FlapiKey.move(128,0)
@@ -374,6 +452,7 @@ class blMenuKITSU(FramelessWindow):
         flapikey_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
         flapikey_toggle_action.triggered.connect(toggle_flapikey_visibility)
         txt_FlapiKey.addAction(flapikey_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
+        self.UI_txt_FlapiKey = txt_FlapiKey
 
 
         flapi_hbox3.addWidget(lbl_FlapiKey)
@@ -387,6 +466,7 @@ class blMenuKITSU(FramelessWindow):
         # lbl_FlapiStatus.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
         lbl_FlapiStatus.setFixedHeight(28)
         lbl_FlapiStatus.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.UI_lbl_FlapiStatus = lbl_FlapiStatus
 
         flapi_connect_btn = QtWidgets.QPushButton('Connect', window)
         flapi_connect_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -394,9 +474,9 @@ class blMenuKITSU(FramelessWindow):
         flapi_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         flapi_connect_btn.clicked.connect(txt_FlapiConnect_Clicked)
-        if self.bl_connector.conn:
+        if self.bl_status != 'Disconnected':
             flapi_connect_btn.setText('Disconnect')
-        self.flapi_connect_btn = flapi_connect_btn
+        self.UI_flapi_connect_btn = flapi_connect_btn
         
         # kitsu_connect_btn.setDefault(True)
 
@@ -424,6 +504,7 @@ class blMenuKITSU(FramelessWindow):
         return window
 
     def close_application(self):
-        self.bl_connector.fl_disconnect()
+        if self.bl_connector:
+            self.bl_connector.fl_disconnect()
         QtWidgets.QApplication.instance().quit()
         # self.quit()
