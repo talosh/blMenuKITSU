@@ -54,6 +54,11 @@ class appBaselightConnector(object):
     def fl_connect(self, *args, **kwargs):
         msg = kwargs.get('msg')
         flapi = self.flapi
+        
+        self.flapi_host = self.prefs.get('flapi_host', 'localhost')
+        self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+        self.flapi_key = self.prefs.get('flapi_key', '')
+
         self.log_debug('opening flapi connection to %s' % self.flapi_host)
         self.log_debug('flapi user: %s' % self.flapi_user)
         self.log_debug('flapi token: %s' % self.flapi_key)
@@ -96,6 +101,56 @@ class appBaselightConnector(object):
             self.conn = None
         self.log_debug('disconnected from %s' % self.flapi_host)
 
-    def fl_create_kitsu_menu(self, kitsu_data):
+    def fl_create_kitsu_menu(self):
+        def onMenuItem1Selected(sender, signal, args):
+            result = app.message_dialog("You clicked 'Menu Item 1'", "", ['OK'])
+
+        def onMenuItem2Selected(sender, signal, args):
+            result = app.message_dialog("You clicked 'Menu Item 2'", "", ['OK'])
+
+        flapi = self.flapi
+        conn = self.conn
+
+        return
+
+        # Connect to FLAPI
+        # conn = flapi.Connection.get() 
+        # conn.connect()
+
+        def onSceneOpen( sender, signal, args ):
+            curSceneName = app.get_current_scene_name()
+            allSceneNames = app.get_open_scene_names()
+            # Display a message dialog containing scene info
+            app.message_dialog(
+                "Open Scenes",
+                "You just opened the scene '%s'.\n\nThere are %i scenes open, including galleries:\n\n%s."\
+                    % (curSceneName, len(allSceneNames), ", ".join(allSceneNames).rstrip(", ")),
+                    ["OK"])
+
+
+
+
+        # Get application
+        app = conn.Application.get()
+
+        # Subscribe to 'SceneOpen' signal
+        app.connect( "SceneOpened", onSceneOpen )
+
+        pprint (app)
+        pprint (app.get_open_scene_names())
+        return
         
-        pass
+        # Place menu items
+        holder_menu = conn.Menu.create()
+
+        menu_items_label = conn.MenuItem.create("My Top Level Menu")
+        menu_items_label.register(flapi.MENULOCATION_EDIT_MENU)
+        menu_items_label.set_sub_menu(holder_menu)
+
+        menu_item_1 = conn.MenuItem.create("Menu Item 1")
+        menu_item_1.connect("MenuItemSelected", onMenuItem1Selected)
+        holder_menu.add_item(menu_item_1)
+
+        menu_item_2 = conn.MenuItem.create("Menu Item 2")
+        menu_item_2.connect("MenuItemSelected", onMenuItem2Selected)
+        holder_menu.add_item(menu_item_2)
