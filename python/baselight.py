@@ -95,3 +95,7 @@ class appBaselightConnector(object):
                 self.mbox.exec_()
             self.conn = None
         self.log_debug('disconnected from %s' % self.flapi_host)
+
+    def fl_create_kitsu_menu(self, kitsu_data):
+        
+        pass
