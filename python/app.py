@@ -45,6 +45,23 @@ class blMenuKITSU(FramelessWindow):
     # Define a custom signal
     allEventsProcessed = QtCore.pyqtSignal()
 
+    class MainLoop(QtCore.QThread):
+        populate_project_list = QtCore.pyqtSignal()
+
+        def run(self):
+            parent = self.parent()
+            prev_kitsu_data = dict(parent.framework.kitsu_data)
+
+            while parent.threads:
+                if pformat(prev_kitsu_data) != pformat(parent.framework.kitsu_data):
+                    prev_kitsu_data = dict(parent.framework.kitsu_data)
+                    self.populate_project_list.emit()
+                    # pprint (parent.framework.kitsu_data.get('active_projects'))
+                time.sleep(0.1)
+            # Do some work...
+            # for project_name in sorted(project_names):
+            #    self.add_action_signal.emit(project_name)
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.framework = kwargs.get('framework')
@@ -71,7 +88,7 @@ class blMenuKITSU(FramelessWindow):
 
         self.loops = []
         self.threads = True
-        self.loops.append(threading.Thread(target=self.cache_loop, args=(8, )))
+        self.loops.append(threading.Thread(target=self.kitsu_loop, args=(8, )))
 
         # self.loops.append(threading.Thread(target=self.cache_short_loop, args=(8, )))
         # self.loops.append(threading.Thread(target=self.cache_long_loop, args=(8, )))
@@ -80,6 +97,10 @@ class blMenuKITSU(FramelessWindow):
         for loop in self.loops:
             loop.daemon = True
             loop.start()
+
+        self.main_loop = self.MainLoop(self)
+        self.main_loop.populate_project_list.connect(self.populate_project_list)
+        self.main_loop.start()
 
         # self.kitsu_connect_btn.click()
         # self.flapi_connect_btn.click()
@@ -153,8 +174,31 @@ class blMenuKITSU(FramelessWindow):
 
     def main_window(self):
 
-        QtWidgets.QApplication.instance().setStyleSheet("QLabel { color :  #999999; }")
-        
+        #QtWidgets.QApplication.instance().setStyleSheet("QLabel { color :  #999999; }")
+
+        QtWidgets.QApplication.instance().setStyleSheet('''
+            QLabel { 
+                color :  #999999; 
+            }
+            QMenu {
+                color: rgb(154, 154, 154);
+                background-color: rgb(44, 54, 68);
+                border: none;
+                font: 14px;
+            }
+            QMenu::item {
+                padding: 6px 10px;
+                background-color: rgb(44, 54, 68)
+            }
+            QMenu::item:selected {
+                background-color: rgb(73, 86, 99);
+            }
+            QMenu::item:hover {
+                color: rgb(0, 0, 0);
+                background-color: rgb(73, 86, 99);
+            }
+        ''')
+
         '''
         self.kitsu_host_text = self.kitsu_host
         self.kitsu_user_text = self.kitsu_user
@@ -260,6 +304,18 @@ class blMenuKITSU(FramelessWindow):
                 txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Normal)
             else:
                 txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
+
+        def set_selector_button_style(button):
+            button.setMinimumSize(QtCore.QSize(150, 28))
+            button.setMaximumSize(QtCore.QSize(150, 28))
+            button.setFocusPolicy(QtCore.Qt.NoFocus)
+            button.setStyleSheet(
+            'QPushButton {color: rgb(154, 154, 154); background-color: rgb(44, 54, 68); border: none; font: 14px}'
+            'QPushButton:hover {border: 1px solid rgb(90, 90, 90)}'
+            'QPushButton:pressed {color: rgb(159, 159, 159); background-color: rgb(44, 54, 68); border: 1px solid rgb(90, 90, 90)}'
+            'QPushButton:disabled {color: rgb(116, 116, 116); background-color: rgb(58, 58, 58); border: none}'
+            'QPushButton::menu-indicator {image: none;}'
+            )
 
         # window = QtWidgets.QWidget()
         window = self
@@ -394,6 +450,17 @@ class blMenuKITSU(FramelessWindow):
         hbox4.addWidget(kitsu_connect_btn)
         vbox1.addLayout(hbox4)
 
+        hbox_scene_selector = QtWidgets.QHBoxLayout()
+
+        # flow res selector button
+        kitsu_project_selector = QtWidgets.QPushButton('Select Project')
+        kitsu_project_selector.setContentsMargins(10, 4, 10, 4)
+        set_selector_button_style(kitsu_project_selector)
+        self.UI_kitsu_project_selector = kitsu_project_selector
+        hbox_scene_selector.addWidget(kitsu_project_selector, alignment=QtCore.Qt.AlignRight)
+        hbox_scene_selector.addSpacing(4)
+        vbox1.addLayout(hbox_scene_selector)
+
         '''
         hbox_spacer = QtWidgets.QHBoxLayout()
         lbl_spacer = QtWidgets.QLabel('', window)
@@ -521,6 +588,17 @@ class blMenuKITSU(FramelessWindow):
 
         return window
 
+    def populate_project_list(self):
+        project_names = new_list = [d.get('name', 'unnamed project') for d in self.framework.kitsu_data['active_projects']]
+
+        # set up mode menu
+        project_menu = QtWidgets.QMenu(self)
+        for project_name in sorted(project_names):
+            action = project_menu.addAction(project_name)
+            x = lambda chk=False, project_name=project_name: self.select_kitsu_project(project_name)
+            action.triggered.connect(x)
+        self.UI_kitsu_project_selector.setMenu(project_menu)
+
     def close_application(self):
         self.terminate_loops()
         if self.bl_connector:
@@ -528,23 +606,21 @@ class blMenuKITSU(FramelessWindow):
         QtWidgets.QApplication.instance().quit()
         # self.quit()
 
-    def cache_loop(self, timeout):
+    def kitsu_loop(self, timeout):
         avg_delta = timeout / 2
         recent_deltas = [avg_delta]*9
         while self.threads:
             start = time.time()
             
-            if (not self.kitsu_connector) or (not self.bl_connector):
+            if not self.kitsu_connector:
                 time.sleep(0.1)
                 continue
 
-            if (not self.kitsu_connector.user) or (not self.bl_connector.conn):
+            if not self.kitsu_connector.user:
                 time.sleep(1)
                 continue
 
             self.kitsu_connector.scan_active_projects()
-            project_names = new_list = [d.get('name', 'unnamed project') for d in self.framework.kitsu_data['active_projects']]
-            pprint (project_names)
 
             # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
             
@@ -570,6 +646,58 @@ class blMenuKITSU(FramelessWindow):
             else:
                 self.loop_timeout(timeout, start)
 
+    def cache_loop(self, timeout):
+        avg_delta = timeout / 2
+        recent_deltas = [avg_delta]*9
+        while self.threads:
+            start = time.time()
+            
+            if (not self.kitsu_connector) or (not self.bl_connector):
+                time.sleep(0.1)
+                continue
+
+            if (not self.kitsu_connector.user) or (not self.bl_connector.conn):
+                time.sleep(1)
+                continue
+
+            self.kitsu_connector.scan_active_projects()
+            project_names = new_list = [d.get('name', 'unnamed project') for d in self.framework.kitsu_data['active_projects']]
+
+            # set up mode menu
+            project_menu = QtWidgets.QMenu(self)
+            for project_name in sorted(project_names):
+                action = project_menu.addAction(project_name)
+                x = lambda chk=False, project_name=project_name: self.select_kitsu_project(project_name)
+                action.triggered[()].connect(x)
+            self.UI_kitsu_project_selector.setMenu(project_menu)
+
+            # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
+            
+            # self.collect_pipeline_data(current_project=current_project, current_client=shortloop_gazu_client)
+
+            # self.gazu.log_out(client = shortloop_gazu_client)
+
+            # self.preformat_common_queries()
+
+            delta = time.time() - start
+            self.log_debug('cache_short_loop took %s sec' % str(delta))
+
+            last_delta = recent_deltas[len(recent_deltas) - 1]
+            recent_deltas.pop(0)
+            
+            if abs(delta - last_delta) > last_delta*3:
+                delta = last_delta*3
+
+            recent_deltas.append(delta)
+            avg_delta = sum(recent_deltas)/float(len(recent_deltas))
+            if avg_delta > timeout/2:
+                self.loop_timeout(avg_delta*2, start)
+            else:
+                self.loop_timeout(timeout, start)
+
+    def select_kitsu_project(self, project_name):
+        print (project_name)
+
     def log(self, message):
         self.framework.log('[' + self.name + '] ' + str(message))
 
@@ -581,6 +709,8 @@ class blMenuKITSU(FramelessWindow):
         
         for loop in self.loops:
             loop.join()
+
+        self.main_loop.wait()
 
     def loop_timeout(self, timeout, start):
         time_passed = int(time.time() - start)
