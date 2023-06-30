@@ -149,6 +149,8 @@ class blMenuKITSU(FramelessWindow):
             self.UI_flapi_connect_btn.setText('Connect')
         self.processEvents()
 
+        self.bl_connector.fl_create_kitsu_menu()
+
     def main_window(self):
 
         QtWidgets.QApplication.instance().setStyleSheet("QLabel { color :  #999999; }")
@@ -227,10 +229,10 @@ class blMenuKITSU(FramelessWindow):
         def txt_FlapiConnect_Clicked():
             if not self.bl_connector.conn:
                 flapi_connect_btn.setText('Connecting...')
+                self.flapi_host_text  = txt_FlapiHost.text()
                 self.prefs['flapi_host'] = self.flapi_host_text
                 self.prefs['flapi_user'] = self.flapi_user_text
                 self.prefs['flapi_key'] = self.flapi_key_text
-                self.framework.save_prefs()
                 self.bl_connector.fl_connect(msg = True)
                 if self.bl_connector.conn:
                     self.bl_status = 'Connected'
