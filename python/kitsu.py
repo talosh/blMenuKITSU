@@ -33,6 +33,8 @@ class appKitsuConnector(object):
         self.mbox = self.framework.mbox
         # self.mbox = QtWidgets.QMessageBox()
         self.get_user()
+        self.init_pipeline_data()
+        self.scan_active_projects()
 
         '''    
         try:
@@ -89,14 +91,15 @@ class appKitsuConnector(object):
 
         self.loops = []
         self.threads = True
-        self.loops.append(threading.Thread(target=self.cache_short_loop, args=(8, )))
-        self.loops.append(threading.Thread(target=self.cache_long_loop, args=(8, )))
-        self.loops.append(threading.Thread(target=self.cache_utility_loop, args=(1, )))
+        self.loops.append(threading.Thread(target=self.cache_loop, args=(8, )))
+
+        # self.loops.append(threading.Thread(target=self.cache_short_loop, args=(8, )))
+        # self.loops.append(threading.Thread(target=self.cache_long_loop, args=(8, )))
+        # self.loops.append(threading.Thread(target=self.cache_utility_loop, args=(1, )))
 
         for loop in self.loops:
             loop.daemon = True
             loop.start()
-
         '''
 
     def log(self, message):
@@ -199,148 +202,6 @@ class appKitsuConnector(object):
         self.prefs_user['kitsu_pass'] = ''
         self.framework.save_prefs()
 
-    def login_dialog(self):
-        from PySide2 import QtWidgets, QtCore
-
-        self.kitsu_host_text = self.kitsu_host
-        self.kitsu_user_text = self.kitsu_user
-        self.kitsu_pass_text = self.kitsu_pass
-
-        def txt_KitsuHost_textChanged():
-            self.kitsu_host_text = txt_KitsuHost.text()
-            # storage_root_paths.setText(calculate_project_path())
-
-        def txt_KitsuUser_textChanged():
-            self.kitsu_user_text = txt_KitsuUser.text()
-
-        def txt_KitsuPass_textChanged():
-            self.kitsu_pass_text = txt_KitsuPass.text()
-
-
-        window = QtWidgets.QDialog()
-        window.setFixedSize(450, 180)
-        window.setWindowTitle(self.app_name + ' - Login')
-        window.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
-        window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        window.setStyleSheet('background-color: #313131')
-
-        screen_res = QtWidgets.QDesktopWidget().screenGeometry()
-        window.move((screen_res.width()/2)-150, (screen_res.height() / 2)-180)
-
-        vbox1 = QtWidgets.QVBoxLayout()
-
-        hbox1 = QtWidgets.QHBoxLayout()
-
-        lbl_Host = QtWidgets.QLabel('Server: ', window)
-        lbl_Host.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
-        lbl_Host.setFixedSize(108, 28)
-        lbl_Host.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
-        txt_KitsuHost = QtWidgets.QLineEdit(self.kitsu_host, window)
-        txt_KitsuHost.setFocusPolicy(QtCore.Qt.StrongFocus)
-        txt_KitsuHost.setMinimumSize(280, 28)
-        txt_KitsuHost.move(128,0)
-        txt_KitsuHost.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #black; border-bottom: 1px inset #545454}')
-        txt_KitsuHost.textChanged.connect(txt_KitsuHost_textChanged)
-        # txt_tankName.setVisible(False)
-
-        hbox1.addWidget(lbl_Host)
-        hbox1.addWidget(txt_KitsuHost)
-
-        hbox2 = QtWidgets.QHBoxLayout()
-
-        lbl_User = QtWidgets.QLabel('User: ', window)
-        lbl_User.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
-        lbl_User.setFixedSize(108, 28)
-        lbl_User.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
-        txt_KitsuUser = QtWidgets.QLineEdit(self.kitsu_user, window)
-        txt_KitsuUser.setFocusPolicy(QtCore.Qt.StrongFocus)
-        txt_KitsuUser.setMinimumSize(280, 28)
-        txt_KitsuUser.move(128,0)
-        txt_KitsuUser.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #black; border-bottom: 1px inset #545454}')
-        txt_KitsuUser.textChanged.connect(txt_KitsuUser_textChanged)
-
-        hbox2.addWidget(lbl_User)
-        hbox2.addWidget(txt_KitsuUser)
-
-        hbox3 = QtWidgets.QHBoxLayout()
-
-        lbl_Pass = QtWidgets.QLabel('Password: ', window)
-        lbl_Pass.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
-        lbl_Pass.setFixedSize(108, 28)
-        lbl_Pass.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
-        txt_KitsuPass = QtWidgets.QLineEdit(self.kitsu_pass, window)
-        txt_KitsuPass.setFocusPolicy(QtCore.Qt.StrongFocus)
-        txt_KitsuPass.setMinimumSize(280, 28)
-        txt_KitsuPass.move(128,0)
-        txt_KitsuPass.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #black; border-bottom: 1px inset #545454}')
-        txt_KitsuPass.setEchoMode(QtWidgets.QLineEdit.Password)
-        txt_KitsuPass.textChanged.connect(txt_KitsuPass_textChanged)
-
-        hbox3.addWidget(lbl_Pass)
-        hbox3.addWidget(txt_KitsuPass)
-
-        vbox1.addLayout(hbox1)
-        vbox1.addLayout(hbox2)
-        vbox1.addLayout(hbox3)
-
-        hbox_spacer = QtWidgets.QHBoxLayout()
-        lbl_spacer = QtWidgets.QLabel('', window)
-        lbl_spacer.setMinimumHeight(8)
-        hbox_spacer.addWidget(lbl_spacer)
-        vbox1.addLayout(hbox_spacer)
-
-        select_btn = QtWidgets.QPushButton('Login', window)
-        select_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
-        select_btn.setMinimumSize(100, 28)
-        select_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
-                                'QPushButton:pressed {font:italic; color: #d9d9d9}')
-        select_btn.clicked.connect(window.accept)
-        select_btn.setDefault(True)
-
-        cancel_btn = QtWidgets.QPushButton('Cancel', window)
-        cancel_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
-        cancel_btn.setMinimumSize(100, 28)
-        cancel_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
-                                'QPushButton:pressed {font:italic; color: #d9d9d9}')
-        cancel_btn.clicked.connect(window.reject)
-        cancel_btn.setDefault(False)
-
-        hbox4 = QtWidgets.QHBoxLayout()
-        hbox4.addWidget(cancel_btn)
-        hbox4.addWidget(select_btn)
-
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.setMargin(20)
-        vbox.addLayout(vbox1)
-        vbox.addLayout(hbox4)
-
-        window.setLayout(vbox)
-
-        window.setTabOrder(txt_KitsuHost, txt_KitsuUser)
-        window.setTabOrder(txt_KitsuUser, txt_KitsuPass)
-        window.setTabOrder(txt_KitsuPass, cancel_btn)
-        window.setTabOrder(cancel_btn, select_btn)
-        window.setTabOrder(select_btn, txt_KitsuHost)
-
-        txt_KitsuUser.setFocus()
-        txt_KitsuHost.setFocus()
-        
-        if window.exec_():
-            # login
-            result = {
-                'host': self.kitsu_host_text,
-                'user': self.kitsu_user_text,
-                'password': self.kitsu_pass_text
-            }
-        else:
-            # cancel
-            result = {}
-
-        return result
-
     def check_linked_project(self, *args, **kwargs):
         try:
             import flame
@@ -371,7 +232,10 @@ class appKitsuConnector(object):
         return True
 
     def init_pipeline_data(self):
-        self.pipeline_data = {}
+        self.pipeline_data = self.framework.kitsu_data
+        self.pipeline_data['active_projects'] = []
+
+        '''
         self.pipeline_data['current_project'] = {}
         self.pipeline_data['project_tasks_for_person'] = []
         self.pipeline_data['all_episodes_for_project'] = []
@@ -384,6 +248,45 @@ class appKitsuConnector(object):
         self.pipeline_data['all_task_types_for_project'] = []
         self.pipeline_data['all_task_statuses_for_project'] = []
         self.pipeline_data['entity_by_id'] = {}
+        '''
+
+    def cache_loop(self, timeout):
+        avg_delta = timeout / 2
+        recent_deltas = [avg_delta]*9
+        while self.threads:
+            start = time.time()                
+            
+            if (not self.user):
+                time.sleep(1)
+                continue
+
+            self.scan_active_projects()
+            project_names = new_list = [d.get('name', 'unnamed project') for d in self.pipeline_data['active_projects']]
+            pprint (project_names)
+
+            # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
+            
+            # self.collect_pipeline_data(current_project=current_project, current_client=shortloop_gazu_client)
+
+            # self.gazu.log_out(client = shortloop_gazu_client)
+
+            # self.preformat_common_queries()
+
+            delta = time.time() - start
+            self.log_debug('cache_short_loop took %s sec' % str(delta))
+
+            last_delta = recent_deltas[len(recent_deltas) - 1]
+            recent_deltas.pop(0)
+            
+            if abs(delta - last_delta) > last_delta*3:
+                delta = last_delta*3
+
+            recent_deltas.append(delta)
+            avg_delta = sum(recent_deltas)/float(len(recent_deltas))
+            if avg_delta > timeout/2:
+                self.loop_timeout(avg_delta*2, start)
+            else:
+                self.loop_timeout(timeout, start)
 
     def cache_short_loop(self, timeout):
         avg_delta = timeout / 2
@@ -519,13 +422,12 @@ class appKitsuConnector(object):
             self.loop_timeout(timeout, start)
 
     def collect_pipeline_data(self, current_project = None, current_client = None):
-        if not self.linked_project_id:
-            return
-        if not current_project:
-            current_project = {'id': self.linked_project_id}
         if not current_client:
             current_client = self.gazu_client
+                
+        self.scan_active_projects()
 
+        '''
         # query requests defined as functions
 
         def get_current_project():
@@ -757,6 +659,7 @@ class appKitsuConnector(object):
                     shot_episode_name = shot_episode.get('name')
             shot['episode_id'] = shot_episode_id
             shot['episode_name'] = shot_episode_name
+        '''
 
     def collect_entity_linked_info(self, entity_key, current_client = None):
         if not current_client:

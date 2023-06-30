@@ -3,6 +3,9 @@ import sys
 import base64
 import getpass
 import time
+import threading
+import inspect
+
 from PyQt5 import QtGui, QtWidgets, QtCore
 
 from .kitsu import appKitsuConnector
@@ -46,6 +49,7 @@ class blMenuKITSU(FramelessWindow):
         super().__init__()
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
+        self.name = self.__class__.__name__
 
         # set intermediate status
         self.kitsu_status = 'Ilde'
@@ -64,6 +68,18 @@ class blMenuKITSU(FramelessWindow):
         self.show()
 
         QtCore.QTimer.singleShot(0, self.after_show)
+
+        self.loops = []
+        self.threads = True
+        self.loops.append(threading.Thread(target=self.cache_loop, args=(8, )))
+
+        # self.loops.append(threading.Thread(target=self.cache_short_loop, args=(8, )))
+        # self.loops.append(threading.Thread(target=self.cache_long_loop, args=(8, )))
+        # self.loops.append(threading.Thread(target=self.cache_utility_loop, args=(1, )))
+
+        for loop in self.loops:
+            loop.daemon = True
+            loop.start()
 
         # self.kitsu_connect_btn.click()
         # self.flapi_connect_btn.click()
@@ -504,7 +520,73 @@ class blMenuKITSU(FramelessWindow):
         return window
 
     def close_application(self):
+        self.terminate_loops()
         if self.bl_connector:
             self.bl_connector.fl_disconnect()
         QtWidgets.QApplication.instance().quit()
         # self.quit()
+
+    def cache_loop(self, timeout):
+        avg_delta = timeout / 2
+        recent_deltas = [avg_delta]*9
+        while self.threads:
+            start = time.time()
+            
+            if (not self.kitsu_connector) or (not self.bl_connector):
+                time.sleep(0.1)
+                continue
+
+            if (not self.kitsu_connector.user) or (not self.bl_connector.conn):
+                time.sleep(1)
+                continue
+
+            self.kitsu_connector.scan_active_projects()
+            project_names = new_list = [d.get('name', 'unnamed project') for d in self.framework.kitsu_data['active_projects']]
+            pprint (project_names)
+
+            # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
+            
+            # self.collect_pipeline_data(current_project=current_project, current_client=shortloop_gazu_client)
+
+            # self.gazu.log_out(client = shortloop_gazu_client)
+
+            # self.preformat_common_queries()
+
+            delta = time.time() - start
+            self.log_debug('cache_short_loop took %s sec' % str(delta))
+
+            last_delta = recent_deltas[len(recent_deltas) - 1]
+            recent_deltas.pop(0)
+            
+            if abs(delta - last_delta) > last_delta*3:
+                delta = last_delta*3
+
+            recent_deltas.append(delta)
+            avg_delta = sum(recent_deltas)/float(len(recent_deltas))
+            if avg_delta > timeout/2:
+                self.loop_timeout(avg_delta*2, start)
+            else:
+                self.loop_timeout(timeout, start)
+
+    def log(self, message):
+        self.framework.log('[' + self.name + '] ' + str(message))
+
+    def log_debug(self, message):
+        self.framework.log_debug('[' + self.name + '] ' + str(message))
+
+    def terminate_loops(self):
+        self.threads = False
+        
+        for loop in self.loops:
+            loop.join()
+
+    def loop_timeout(self, timeout, start):
+        time_passed = int(time.time() - start)
+        if timeout <= time_passed:
+            return
+        else:
+            for n in range(int(timeout - time_passed) * 10):
+                if not self.threads:
+                    self.log_debug('leaving loop thread: %s' % inspect.currentframe().f_back.f_code.co_name)
+                    break
+                time.sleep(0.1)

@@ -96,6 +96,9 @@ class AppFramework(object):
             self.hostname,
         )
 
+        self.kitsu_data = {}
+        self.baselight_data = {}
+
         self.log('[%s] waking up' % self.__class__.__name__)
         # self.load_prefs()
         self.mbox = self.setup_message_box()
