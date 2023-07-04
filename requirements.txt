@@ -1,4 +1,5 @@
+urllib3<2.0
 pyinstaller
-PySide2
+pyqt5
 gazu
 websocket-client
