@@ -75,6 +75,9 @@ class blMenuKITSU(FramelessWindow):
         self.kitsu_connector = None
         self.bl_connector = None
 
+        self.kitsu_current_project = {}
+        self.kitsu_current_episode = {}
+
         # Connect the signal to the slot
         self.allEventsProcessed.connect(self.on_allEventsProcessed)
         # A flag to check if all events have been processed
@@ -124,6 +127,10 @@ class blMenuKITSU(FramelessWindow):
             self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
         self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+        self.flapi_pass = ''
+        encoded_flapi_pass = self.prefs.get('flapi_pass', '')
+        if encoded_flapi_pass:
+            self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
         self.flapi_key = self.prefs.get('flapi_key', '')
         
         self.UI_txt_KitsuHost.setText(self.kitsu_host)
@@ -131,6 +138,7 @@ class blMenuKITSU(FramelessWindow):
         self.UI_txt_KitsuPass.setText(self.kitsu_pass)
         self.UI_txt_FlapiHost.setText(self.flapi_host)
         self.UI_txt_FlapiUser.setText(self.flapi_user)
+        self.UI_txt_FlapiPass.setText(self.flapi_pass)
         self.UI_txt_FlapiKey.setText(self.flapi_key)
 
         self.UI_lbl_KitsuStatus.setText('Connecting...')
@@ -213,7 +221,11 @@ class blMenuKITSU(FramelessWindow):
         self.kitsu_pass_text = ''
         self.flapi_host_text = ''
         self.flapi_user_text = ''
+        self.flapi_pass_text = ''
         self.flapi_key_text = ''
+
+        self.flapi_scenepath_text = ''
+
 
         def setLabelColour(label):
             if label.text() == 'Connected':
@@ -270,13 +282,21 @@ class blMenuKITSU(FramelessWindow):
         def txt_FlapiKey_textChanged():
             self.flapi_key_text = txt_FlapiKey.text()
 
+        def txt_FlapiPass_textChanged():
+            self.flapi_pass_text = txt_FlapiPass.text()
+
+        def txt_FlapiScenePath_textChanged():
+            self.flapi_scenepath_text = txt_FlapiScenePath.text()
+
         def txt_FlapiConnect_Clicked():
             if not self.bl_connector.conn:
                 flapi_connect_btn.setText('Connecting...')
                 self.flapi_host_text  = txt_FlapiHost.text()
                 self.prefs['flapi_host'] = self.flapi_host_text
                 self.prefs['flapi_user'] = self.flapi_user_text
+                self.prefs['flapi_pass'] = base64.b64encode(self.flapi_pass_text.encode("utf-8")).decode("utf-8")
                 self.prefs['flapi_key'] = self.flapi_key_text
+                self.framework.save_prefs()
                 self.bl_connector.fl_connect(msg = True)
                 if self.bl_connector.conn:
                     self.bl_status = 'Connected'
@@ -305,9 +325,16 @@ class blMenuKITSU(FramelessWindow):
             else:
                 txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
 
+        def toggle_flapipass_visibility():
+            if txt_FlapiPass.echoMode() == QtWidgets.QLineEdit.Password:
+                txt_FlapiPass.setEchoMode(QtWidgets.QLineEdit.Normal)
+            else:
+                txt_FlapiPass.setEchoMode(QtWidgets.QLineEdit.Password)
+
         def set_selector_button_style(button):
-            button.setMinimumSize(QtCore.QSize(150, 28))
-            button.setMaximumSize(QtCore.QSize(150, 28))
+            # button.setMinimumSize(QtCore.QSize(280, 28))
+            button.setFixedHeight(28)
+            # button.setMaximumSize(QtCore.QSize(150, 28))
             button.setFocusPolicy(QtCore.Qt.NoFocus)
             button.setStyleSheet(
             'QPushButton {color: rgb(154, 154, 154); background-color: rgb(44, 54, 68); border: none; font: 14px}'
@@ -316,6 +343,9 @@ class blMenuKITSU(FramelessWindow):
             'QPushButton:disabled {color: rgb(116, 116, 116); background-color: rgb(58, 58, 58); border: none}'
             'QPushButton::menu-indicator {image: none;}'
             )
+
+        def btn_ActionProceed_Clicked():
+            pass
 
         # window = QtWidgets.QWidget()
         window = self
@@ -457,8 +487,20 @@ class blMenuKITSU(FramelessWindow):
         kitsu_project_selector.setContentsMargins(10, 4, 10, 4)
         set_selector_button_style(kitsu_project_selector)
         self.UI_kitsu_project_selector = kitsu_project_selector
-        hbox_scene_selector.addWidget(kitsu_project_selector, alignment=QtCore.Qt.AlignRight)
+        # hbox_scene_selector.addWidget(kitsu_project_selector, alignment=QtCore.Qt.AlignLeft)
+        hbox_scene_selector.addWidget(kitsu_project_selector)
         hbox_scene_selector.addSpacing(4)
+        hbox_scene_selector.setStretchFactor(kitsu_project_selector, 1)
+
+        kitsu_episode_selector = QtWidgets.QPushButton('Select Episode')
+        kitsu_episode_selector.setContentsMargins(10, 4, 10, 4)
+        set_selector_button_style(kitsu_episode_selector)
+        self.UI_kitsu_episode_selector = kitsu_episode_selector
+        hbox_scene_selector.addWidget(kitsu_episode_selector)
+        # hbox_scene_selector.addWidget(kitsu_episode_selector, alignment=QtCore.Qt.AlignRight)
+        hbox_scene_selector.addSpacing(4)
+        hbox_scene_selector.setStretchFactor(kitsu_episode_selector, 1)
+
         vbox1.addLayout(hbox_scene_selector)
 
         '''
@@ -519,6 +561,28 @@ class blMenuKITSU(FramelessWindow):
         flapi_hbox2.addWidget(txt_FlapiUser)
         flapi_vbox1.addLayout(flapi_hbox2)
 
+        # ssh password field
+        flapi_hbox_sshpass = QtWidgets.QHBoxLayout()
+        lbl_FlapiPass = QtWidgets.QLabel('Password: ', window)
+        lbl_FlapiPass.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiPass.setFixedSize(108, 28)
+        lbl_FlapiPass.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        txt_FlapiPass = QtWidgets.QLineEdit(self.flapi_key_text, window)
+        txt_FlapiPass.setFocusPolicy(QtCore.Qt.StrongFocus)
+        txt_FlapiPass.setMinimumSize(280, 28)
+        txt_FlapiPass.move(128,0)
+        txt_FlapiPass.setStyleSheet('QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454}')
+        txt_FlapiPass.setEchoMode(QtWidgets.QLineEdit.Password)
+        txt_FlapiPass.textChanged.connect(txt_FlapiPass_textChanged)
+        flapipass_toggle_action = QtWidgets.QAction(window)
+        flapipass_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
+        flapipass_toggle_action.triggered.connect(toggle_flapipass_visibility)
+        txt_FlapiPass.addAction(flapipass_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
+        self.UI_txt_FlapiPass = txt_FlapiPass
+        flapi_hbox_sshpass.addWidget(lbl_FlapiPass)
+        flapi_hbox_sshpass.addWidget(txt_FlapiPass)
+        flapi_vbox1.addLayout(flapi_hbox_sshpass)
+
         flapi_hbox3 = QtWidgets.QHBoxLayout()
 
         lbl_FlapiKey = QtWidgets.QLabel('API Key: ', window)
@@ -526,7 +590,7 @@ class blMenuKITSU(FramelessWindow):
         lbl_FlapiKey.setFixedSize(108, 28)
         lbl_FlapiKey.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        txt_FlapiKey = QtWidgets.QLineEdit(self.flapi_key_text, window)
+        txt_FlapiKey = QtWidgets.QLineEdit(self.flapi_pass_text, window)
         txt_FlapiKey.setFocusPolicy(QtCore.Qt.StrongFocus)
         txt_FlapiKey.setMinimumSize(280, 28)
         txt_FlapiKey.move(128,0)
@@ -538,7 +602,6 @@ class blMenuKITSU(FramelessWindow):
         flapikey_toggle_action.triggered.connect(toggle_flapikey_visibility)
         txt_FlapiKey.addAction(flapikey_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
         self.UI_txt_FlapiKey = txt_FlapiKey
-
 
         flapi_hbox3.addWidget(lbl_FlapiKey)
         flapi_hbox3.addWidget(txt_FlapiKey)
@@ -569,6 +632,48 @@ class blMenuKITSU(FramelessWindow):
         flapi_hbox3.addWidget(flapi_connect_btn)
         flapi_vbox1.addLayout(flapi_hbox3)
 
+        # Baselight scene path
+        lbl_FlapiScenePath = QtWidgets.QLabel('Baselight Scene Path: ', window)
+        lbl_FlapiScenePath.setStyleSheet('QFrame {color: #989898; background-color: #373737}')
+        lbl_FlapiScenePath.setFixedHeight(28)
+        lbl_FlapiScenePath.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+
+        txt_FlapiScenePath = QtWidgets.QLineEdit(self.flapi_scenepath_text, window)
+        txt_FlapiScenePath.setFocusPolicy(QtCore.Qt.StrongFocus)
+        txt_FlapiScenePath.setMinimumSize(280, 28)
+        txt_FlapiScenePath.setStyleSheet(
+            'QLineEdit {color: #9a9a9a; background-color: #373e47; border-top: 1px inset #000000; border-bottom: 1px inset #545454;}'
+            )
+        txt_FlapiScenePath.textChanged.connect(txt_FlapiScenePath_textChanged)
+        self.UI_txt_FlapiScenePath = txt_FlapiScenePath
+
+        flapi_vbox1.addWidget(lbl_FlapiScenePath)
+        flapi_vbox1.addWidget(txt_FlapiScenePath)
+
+        # action selector and proceed button
+        hbox_action_selector = QtWidgets.QHBoxLayout()
+        action_selector = QtWidgets.QPushButton('Select Action')
+        action_selector.setContentsMargins(10, 4, 10, 4)
+        set_selector_button_style(action_selector)
+        self.UI_action_selector = action_selector
+        # hbox_scene_selector.addWidget(kitsu_project_selector, alignment=QtCore.Qt.AlignLeft)
+        hbox_action_selector.addWidget(action_selector)
+        hbox_action_selector.addSpacing(4)
+        hbox_action_selector.setStretchFactor(action_selector, 1)
+
+        action_proceed_btn = QtWidgets.QPushButton('Proceed', window)
+        action_proceed_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
+        action_proceed_btn.setMinimumSize(100, 28)
+        action_proceed_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
+                                'QPushButton:pressed {font:italic; color: #d9d9d9}')
+        action_proceed_btn.clicked.connect(btn_ActionProceed_Clicked)
+        self.UI_action_proceed_btn = action_proceed_btn
+        hbox_action_selector.addWidget(action_proceed_btn)
+        hbox_action_selector.addSpacing(4)
+        hbox_action_selector.setStretchFactor(action_proceed_btn, 1)
+
+        flapi_vbox1.addLayout(hbox_action_selector)
+
         vbox = QtWidgets.QVBoxLayout(window)
         vbox.setContentsMargins(20, 20, 20, 20)
         vbox.addLayout(vbox1)
@@ -589,15 +694,38 @@ class blMenuKITSU(FramelessWindow):
         return window
 
     def populate_project_list(self):
-        project_names = new_list = [d.get('name', 'unnamed project') for d in self.framework.kitsu_data['active_projects']]
-
-        # set up mode menu
         project_menu = QtWidgets.QMenu(self)
-        for project_name in sorted(project_names):
-            action = project_menu.addAction(project_name)
-            x = lambda chk=False, project_name=project_name: self.select_kitsu_project(project_name)
+        projects = self.framework.kitsu_data.get('active_projects', list())
+        for project in sorted(projects, key=lambda x: x['name']):
+            action = project_menu.addAction(project.get('name'))
+            x = lambda chk=False, project=project: self.select_kitsu_project(project)
             action.triggered.connect(x)
         self.UI_kitsu_project_selector.setMenu(project_menu)
+
+    def select_kitsu_project(self, project):
+        self.kitsu_current_project = dict(project)
+        self.UI_kitsu_project_selector.setText(project.get('name'))
+        self.populate_episodes_list()
+
+    def populate_episodes_list(self):
+        if not self.kitsu_current_project:
+            return
+        current_project_id = self.kitsu_current_project.get('id')
+        if not current_project_id:
+            return
+        episodes_menu = QtWidgets.QMenu(self)
+        episodes_by_project_id = self.framework.kitsu_data.get('episodes_by_project_id', dict())
+        episodes = episodes_by_project_id.get(current_project_id, list())
+        for episode in sorted(episodes, key=lambda x: x['name']):
+            action = episodes_menu.addAction(episode.get('name'))
+            x = lambda chk=False, episode=episode: self.select_kitsu_episode(episode)
+            action.triggered.connect(x)
+        self.UI_kitsu_episode_selector.setMenu(episodes_menu)
+
+    def select_kitsu_episode(self, episode):
+        self.kitsu_current_episode = dict(episode)
+        pprint (episode)
+        self.UI_kitsu_episode_selector.setText(episode.get('name'))
 
     def close_application(self):
         self.terminate_loops()
@@ -620,7 +748,7 @@ class blMenuKITSU(FramelessWindow):
                 time.sleep(1)
                 continue
 
-            self.kitsu_connector.scan_active_projects()
+            self.kitsu_connector.collect_pipeline_data()
 
             # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
             
@@ -660,17 +788,6 @@ class blMenuKITSU(FramelessWindow):
                 time.sleep(1)
                 continue
 
-            self.kitsu_connector.scan_active_projects()
-            project_names = new_list = [d.get('name', 'unnamed project') for d in self.framework.kitsu_data['active_projects']]
-
-            # set up mode menu
-            project_menu = QtWidgets.QMenu(self)
-            for project_name in sorted(project_names):
-                action = project_menu.addAction(project_name)
-                x = lambda chk=False, project_name=project_name: self.select_kitsu_project(project_name)
-                action.triggered[()].connect(x)
-            self.UI_kitsu_project_selector.setMenu(project_menu)
-
             # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
             
             # self.collect_pipeline_data(current_project=current_project, current_client=shortloop_gazu_client)
@@ -694,9 +811,6 @@ class blMenuKITSU(FramelessWindow):
                 self.loop_timeout(avg_delta*2, start)
             else:
                 self.loop_timeout(timeout, start)
-
-    def select_kitsu_project(self, project_name):
-        print (project_name)
 
     def log(self, message):
         self.framework.log('[' + self.name + '] ' + str(message))
