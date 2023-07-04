@@ -234,6 +234,7 @@ class appKitsuConnector(object):
     def init_pipeline_data(self):
         self.pipeline_data = self.framework.kitsu_data
         self.pipeline_data['active_projects'] = []
+        self.pipeline_data['episodes_by_project_id'] = {}
 
         '''
         self.pipeline_data['current_project'] = {}
@@ -424,8 +425,9 @@ class appKitsuConnector(object):
     def collect_pipeline_data(self, current_project = None, current_client = None):
         if not current_client:
             current_client = self.gazu_client
-                
+
         self.scan_active_projects()
+        self.get_episodes_for_projects()
 
         '''
         # query requests defined as functions
@@ -701,6 +703,13 @@ class appKitsuConnector(object):
                     self.pipeline_data['active_projects'] = [{}]
             except Exception as e:
                 self.log(pformat(e))
+
+    def get_episodes_for_projects(self):
+        projects = self.pipeline_data.get('active_projects', list())
+        for project in projects:
+            project_id = project.get('id', 'unknown_id')
+            all_episodes_for_project = self.gazu.shot.all_episodes_for_project(project, client = self.gazu_client)
+            self.pipeline_data['episodes_by_project_id'][project_id] = list(all_episodes_for_project)
 
     def resolve_storage_root(self):
         storage_root = self.prefs.get('storage_root')
