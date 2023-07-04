@@ -35,7 +35,11 @@ class appBaselightConnector(object):
         self.framework.log_debug('[' + self.name + '] ' + str(message))
 
     def import_flapi(self):
-        flapi_module_path = '/Applications/Baselight/Current/Utilities/Resources/share/flapi/python/flapi'
+        from . import flapi
+        return flapi
+
+        '''
+        flapi_module_path = '/Applications/Baselight/Current/Utilities/Resources/share/flapi/python/'
         if not os.path.isdir(flapi_module_path):
             from . import flapi
             return flapi
@@ -45,11 +49,13 @@ class appBaselightConnector(object):
                 if not flapi_module_path in sys.path:
                     sys.path.insert(0, flapi_module_path)
                 import flapi
+                pprint (dir(flapi))
                 return flapi
             except Exception as e:
                 msg = f'unable to import filmlight api python module from: {flapi_module_path}\n'
                 self.mbox.setText(msg + pformat(e))
                 self.mbox.exec_()
+        '''
 
     def fl_connect(self, *args, **kwargs):
         msg = kwargs.get('msg')
