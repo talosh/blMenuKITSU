@@ -121,7 +121,8 @@ class blMenuKITSU(FramelessWindow):
         self.allEventsFlag = True
 
     def after_show(self):
-        self.setFixedSize(self.size())
+        self.setMinimumSize(self.size())
+        self.setFixedHeight(self.size().height())
         try:
             self.framework.load_prefs()
             self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
