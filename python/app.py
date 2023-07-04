@@ -67,6 +67,7 @@ class blMenuKITSU(FramelessWindow):
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
         self.name = self.__class__.__name__
+        self.mbox = self.framework.mbox
 
         # set intermediate status
         self.kitsu_status = 'Ilde'
@@ -88,6 +89,8 @@ class blMenuKITSU(FramelessWindow):
         self.show()
 
         QtCore.QTimer.singleShot(0, self.after_show)
+
+        self.populate_actions_list()
 
         self.loops = []
         self.threads = True
@@ -118,67 +121,72 @@ class blMenuKITSU(FramelessWindow):
         self.allEventsFlag = True
 
     def after_show(self):
-        self.framework.load_prefs()
-        self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
-        self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
-        self.kitsu_pass = ''
-        encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
-        if encoded_kitsu_pass:
-            self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
-        self.flapi_host = self.prefs.get('flapi_host', 'localhost')
-        self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
-        self.flapi_pass = ''
-        encoded_flapi_pass = self.prefs.get('flapi_pass', '')
-        if encoded_flapi_pass:
-            self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
-        self.flapi_key = self.prefs.get('flapi_key', '')
-        
-        self.UI_txt_KitsuHost.setText(self.kitsu_host)
-        self.UI_txt_KitsuUser.setText(self.kitsu_user)
-        self.UI_txt_KitsuPass.setText(self.kitsu_pass)
-        self.UI_txt_FlapiHost.setText(self.flapi_host)
-        self.UI_txt_FlapiUser.setText(self.flapi_user)
-        self.UI_txt_FlapiPass.setText(self.flapi_pass)
-        self.UI_txt_FlapiKey.setText(self.flapi_key)
+        self.setFixedSize(self.size())
+        try:
+            self.framework.load_prefs()
+            self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
+            self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
+            self.kitsu_pass = ''
+            encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
+            if encoded_kitsu_pass:
+                self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
+            self.flapi_host = self.prefs.get('flapi_host', 'localhost')
+            self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+            self.flapi_pass = ''
+            encoded_flapi_pass = self.prefs.get('flapi_pass', '')
+            if encoded_flapi_pass:
+                self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
+            self.flapi_key = self.prefs.get('flapi_key', '')
+            
+            self.UI_txt_KitsuHost.setText(self.kitsu_host)
+            self.UI_txt_KitsuUser.setText(self.kitsu_user)
+            self.UI_txt_KitsuPass.setText(self.kitsu_pass)
+            self.UI_txt_FlapiHost.setText(self.flapi_host)
+            self.UI_txt_FlapiUser.setText(self.flapi_user)
+            self.UI_txt_FlapiPass.setText(self.flapi_pass)
+            self.UI_txt_FlapiKey.setText(self.flapi_key)
 
-        self.UI_lbl_KitsuStatus.setText('Connecting...')
-        self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
-        self.processEvents()
-
-        self.kitsu_connector = appKitsuConnector(self.framework)
-
-        if self.kitsu_connector.user:
-            self.kitsu_status = 'Connected'
-            self.UI_lbl_KitsuStatus.setText('Connected')
+            self.UI_lbl_KitsuStatus.setText('Connecting...')
             self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
-            self.UI_kitsu_connect_btn.setText('Disconnect')
-        else:
-            self.kitsu_status = 'Disconnected'
-            self.UI_lbl_KitsuStatus.setText('Disconnected')
-            self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
-            self.UI_kitsu_connect_btn.setText('Connect')
+            self.processEvents()
 
-        self.processEvents()
+            self.kitsu_connector = appKitsuConnector(self.framework)
 
-        self.UI_lbl_FlapiStatus.setText('Connecting...')
-        self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
-        self.processEvents()
+            if self.kitsu_connector.user:
+                self.kitsu_status = 'Connected'
+                self.UI_lbl_KitsuStatus.setText('Connected')
+                self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
+                self.UI_kitsu_connect_btn.setText('Disconnect')
+            else:
+                self.kitsu_status = 'Disconnected'
+                self.UI_lbl_KitsuStatus.setText('Disconnected')
+                self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
+                self.UI_kitsu_connect_btn.setText('Connect')
 
-        self.bl_connector = appBaselightConnector(self.framework)
+            self.processEvents()
 
-        if self.bl_connector.conn:
-            self.bl_status = 'Connected'
-            self.UI_lbl_FlapiStatus.setText('Connected')
+            self.UI_lbl_FlapiStatus.setText('Connecting...')
             self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
-            self.UI_flapi_connect_btn.setText('Disconnect')
-        else:
-            self.bl_status = 'Disconnected'
-            self.UI_lbl_FlapiStatus.setText('Disconnected')
-            self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
-            self.UI_flapi_connect_btn.setText('Connect')
-        self.processEvents()
+            self.processEvents()
 
-        self.bl_connector.fl_create_kitsu_menu()
+            self.bl_connector = appBaselightConnector(self.framework)
+
+            if self.bl_connector.conn:
+                self.bl_status = 'Connected'
+                self.UI_lbl_FlapiStatus.setText('Connected')
+                self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
+                self.UI_flapi_connect_btn.setText('Disconnect')
+            else:
+                self.bl_status = 'Disconnected'
+                self.UI_lbl_FlapiStatus.setText('Disconnected')
+                self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
+                self.UI_flapi_connect_btn.setText('Connect')
+            self.processEvents()
+
+            self.bl_connector.fl_create_kitsu_menu()
+        except Exception as e:
+            self.mbox.setText(pformat(e))
+            self.mbox.exec_()
 
     def main_window(self):
 
@@ -206,6 +214,10 @@ class blMenuKITSU(FramelessWindow):
                 background-color: rgb(73, 86, 99);
             }
         ''')
+
+        # pyinstaller resources path setting
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        eye_icon_path = os.path.join(base_path, 'resources', 'eye.png')
 
         '''
         self.kitsu_host_text = self.kitsu_host
@@ -446,7 +458,7 @@ class blMenuKITSU(FramelessWindow):
         txt_KitsuPass.setEchoMode(QtWidgets.QLineEdit.Password)
         txt_KitsuPass.textChanged.connect(txt_KitsuPass_textChanged)
         kitsu_pass_toggle_action = QtWidgets.QAction(window)
-        kitsu_pass_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
+        kitsu_pass_toggle_action.setIcon(QtGui.QIcon(eye_icon_path))
         kitsu_pass_toggle_action.triggered.connect(toggle_kitsu_password_visibility)
         txt_KitsuPass.addAction(kitsu_pass_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
         self.UI_txt_KitsuPass = txt_KitsuPass
@@ -575,7 +587,7 @@ class blMenuKITSU(FramelessWindow):
         txt_FlapiPass.setEchoMode(QtWidgets.QLineEdit.Password)
         txt_FlapiPass.textChanged.connect(txt_FlapiPass_textChanged)
         flapipass_toggle_action = QtWidgets.QAction(window)
-        flapipass_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
+        flapipass_toggle_action.setIcon(QtGui.QIcon(eye_icon_path))
         flapipass_toggle_action.triggered.connect(toggle_flapipass_visibility)
         txt_FlapiPass.addAction(flapipass_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
         self.UI_txt_FlapiPass = txt_FlapiPass
@@ -598,7 +610,7 @@ class blMenuKITSU(FramelessWindow):
         txt_FlapiKey.setEchoMode(QtWidgets.QLineEdit.Password)
         txt_FlapiKey.textChanged.connect(txt_FlapiKey_textChanged)
         flapikey_toggle_action = QtWidgets.QAction(window)
-        flapikey_toggle_action.setIcon(QtGui.QIcon('resources/eye.png'))
+        flapikey_toggle_action.setIcon(QtGui.QIcon(eye_icon_path))
         flapikey_toggle_action.triggered.connect(toggle_flapikey_visibility)
         txt_FlapiKey.addAction(flapikey_toggle_action, QtWidgets.QLineEdit.TrailingPosition)
         self.UI_txt_FlapiKey = txt_FlapiKey
@@ -692,6 +704,22 @@ class blMenuKITSU(FramelessWindow):
         self.setLayout(vbox)
 
         return window
+
+    def populate_actions_list(self):
+        actions_menu = QtWidgets.QMenu(self)
+        actions = [
+            {'code': 1, 'name': 'Baselight Scene to Kitsu'},
+            {'code': 2, 'name': 'Kitsu markers to Baselight'}
+        ]
+        for a in sorted(actions, key=lambda x: x['code']):
+            action = actions_menu.addAction(a.get('name'))
+            x = lambda chk=False, a=a: self.select_action(a)
+            action.triggered.connect(x)
+        self.UI_action_selector.setMenu(actions_menu)
+
+    def select_action(self, action):
+        self.current_action = action
+        self.UI_action_selector.setText(action.get('name'))
 
     def populate_project_list(self):
         project_menu = QtWidgets.QMenu(self)
