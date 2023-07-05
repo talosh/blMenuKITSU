@@ -1,6 +1,7 @@
 import os
 import sys
 import inspect
+import queue
 import re
 import traceback
 
@@ -103,16 +104,24 @@ class AppFramework(object):
         # self.load_prefs()
         self.mbox = self.setup_message_box()
 
+        self.message_queue = queue.Queue()
+
     def log(self, message):
         try:
-            print ('[%s] %s' % (self.bundle_name, str(message)))
+            message = f'[{self.bundle_name}] {str(message)}'
+            print (message)
+            if self.message_queue.qsize() < 256:
+                self.message_queue.put(message)
         except:
             pass
 
     def log_debug(self, message):
         if self.debug:
             try:
-                print ('[DEBUG %s] %s' % (self.bundle_name, str(message)))
+                message = f'[DEBUG {self.bundle_name}] {str(message)}'
+                print (message)
+                if self.message_queue.qsize() < 256:
+                    self.message_queue.put(message)
             except:
                 pass
 

@@ -2,6 +2,7 @@ import os
 import sys
 import base64
 import getpass
+import queue
 import time
 import threading
 import inspect
@@ -43,10 +44,13 @@ class FramelessWindow(QtWidgets.QWidget):
 
 class TerminalWidget(QtWidgets.QPlainTextEdit):
     from PyQt5.QtCore import pyqtSignal, pyqtSlot
+    # Define a new signal called 'append_signal' that takes a single str argument
+    append_signal = pyqtSignal(str)
+
     def __init__(self, parent=None):
         super(TerminalWidget, self).__init__(parent)
         self.setReadOnly(True)  # Make the text edit read only
-        self.setMaximumBlockCount(3)  # Set the maximum number of lines
+        self.setMaximumBlockCount(255)  # Set the maximum number of lines
         self.setFixedHeight(80)
         self.setStyleSheet("""
             QPlainTextEdit {
@@ -56,11 +60,37 @@ class TerminalWidget(QtWidgets.QPlainTextEdit):
                 border-radius: 4px;
                 font-size: 12px;
             }
+
+            QPlainTextEdit QScrollBar:vertical {
+                border: none;
+                background: #2A2929;
+                width: 8px;
+            }
+
+            QScrollBar::handle:vertical {
+                background: #605F5F;
+            }
+
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                border: none;
+                background: none;
+            }
+
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+            
             """)
+        self.append_signal.connect(self.append_slot)
+
+    @pyqtSlot(str)
+    def append_slot(self, text):
+        self.appendPlainText(text)
+        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())  # Auto scroll to the bottom
 
     def append(self, text):
-        super(TerminalWidget, self).appendPlainText(text)
-        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())  # Auto scroll to the bottom
+        # Emit the 'append_signal' with the text
+        self.append_signal.emit(text)
 
 class blMenuKITSU(FramelessWindow):
     # Define a custom signal
@@ -735,7 +765,27 @@ class blMenuKITSU(FramelessWindow):
         return window
 
     def process_terminal_messages(self):
-        self.UI_terminal.append('hello')
+        while self.threads:
+            try:
+                item = self.framework.message_queue.get_nowait()
+            except queue.Empty:
+                if not self.threads:
+                    break
+                time.sleep(0.05)
+                continue
+            if item is None:
+                time.sleep(0.05)
+                continue
+            if not isinstance(item, str):
+                self.framework.message_queue.task_done()
+                time.sleep(0.05)
+                continue
+            else:
+                self.UI_terminal.append(item)
+            
+            self.framework.message_queue.task_done()
+            time.sleep(0.05)
+        return
 
     def populate_actions_list(self):
         actions_menu = QtWidgets.QMenu(self)
