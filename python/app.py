@@ -41,6 +41,27 @@ class FramelessWindow(QtWidgets.QWidget):
         QtWidgets.QApplication.instance().quit()
         # self.quit()
 
+class TerminalWidget(QtWidgets.QPlainTextEdit):
+    from PyQt5.QtCore import pyqtSignal, pyqtSlot
+    def __init__(self, parent=None):
+        super(TerminalWidget, self).__init__(parent)
+        self.setReadOnly(True)  # Make the text edit read only
+        self.setMaximumBlockCount(3)  # Set the maximum number of lines
+        self.setFixedHeight(80)
+        self.setStyleSheet("""
+            QPlainTextEdit {
+                color: #889800;
+                background-color: #373737;
+                border: 1px solid #989898;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            """)
+
+    def append(self, text):
+        super(TerminalWidget, self).appendPlainText(text)
+        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())  # Auto scroll to the bottom
+
 class blMenuKITSU(FramelessWindow):
     # Define a custom signal
     allEventsProcessed = QtCore.pyqtSignal()
@@ -88,12 +109,9 @@ class blMenuKITSU(FramelessWindow):
         self.setStyleSheet("background-color: rgb(49, 49, 49);")
         self.show()
 
-        QtCore.QTimer.singleShot(0, self.after_show)
-
-        self.populate_actions_list()
-
         self.loops = []
         self.threads = True
+        self.loops.append(threading.Thread(target=self.process_terminal_messages))
         self.loops.append(threading.Thread(target=self.kitsu_loop, args=(8, )))
 
         # self.loops.append(threading.Thread(target=self.cache_short_loop, args=(8, )))
@@ -108,6 +126,9 @@ class blMenuKITSU(FramelessWindow):
         self.main_loop.populate_project_list.connect(self.populate_project_list)
         self.main_loop.start()
 
+        QtCore.QTimer.singleShot(0, self.after_show)
+        self.populate_actions_list()
+
         # self.kitsu_connect_btn.click()
         # self.flapi_connect_btn.click()
 
@@ -121,8 +142,8 @@ class blMenuKITSU(FramelessWindow):
         self.allEventsFlag = True
 
     def after_show(self):
-        self.setMinimumSize(self.size())
-        self.setFixedHeight(self.size().height())
+        # self.setMinimumSize(self.size())
+        # self.setFixedHeight(self.size().height())
         try:
             self.framework.load_prefs()
             self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
@@ -138,6 +159,7 @@ class blMenuKITSU(FramelessWindow):
             if encoded_flapi_pass:
                 self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
             self.flapi_key = self.prefs.get('flapi_key', '')
+            self.flapi_scenepath = self.prefs.get('bl_path', '')
             
             self.UI_txt_KitsuHost.setText(self.kitsu_host)
             self.UI_txt_KitsuUser.setText(self.kitsu_user)
@@ -146,6 +168,7 @@ class blMenuKITSU(FramelessWindow):
             self.UI_txt_FlapiUser.setText(self.flapi_user)
             self.UI_txt_FlapiPass.setText(self.flapi_pass)
             self.UI_txt_FlapiKey.setText(self.flapi_key)
+            self.UI_txt_FlapiScenePath.setText(self.flapi_scenepath)
 
             self.UI_lbl_KitsuStatus.setText('Connecting...')
             self.UI_setLabelColour(self.UI_lbl_KitsuStatus)
@@ -300,6 +323,7 @@ class blMenuKITSU(FramelessWindow):
 
         def txt_FlapiScenePath_textChanged():
             self.flapi_scenepath_text = txt_FlapiScenePath.text()
+            self.prefs['bl_path'] = self.flapi_scenepath_text
 
         def txt_FlapiConnect_Clicked():
             if not self.bl_connector.conn:
@@ -365,9 +389,9 @@ class blMenuKITSU(FramelessWindow):
         window.setWindowTitle(self.framework.app_name)
         window.setStyleSheet('background-color: #313131')
         window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        window.setMinimumSize(450, 180)
-        screen_res = QtWidgets.QDesktopWidget().screenGeometry()
-        window.move((screen_res.width()/2)-150, (screen_res.height() / 2)-180)
+        window.setMinimumSize(480, 800)
+        # screen_res = QtWidgets.QDesktopWidget().screenGeometry()
+        # window.move((screen_res.width()/2)-150, (screen_res.height() / 2) - 180)
 
         '''
         main_vbox = QtWidgets.QVBoxLayout(window)
@@ -497,7 +521,7 @@ class blMenuKITSU(FramelessWindow):
 
         # flow res selector button
         kitsu_project_selector = QtWidgets.QPushButton('Select Project')
-        kitsu_project_selector.setContentsMargins(10, 4, 10, 4)
+        kitsu_project_selector.setContentsMargins(10, 0, 10, 0)
         set_selector_button_style(kitsu_project_selector)
         self.UI_kitsu_project_selector = kitsu_project_selector
         # hbox_scene_selector.addWidget(kitsu_project_selector, alignment=QtCore.Qt.AlignLeft)
@@ -506,7 +530,7 @@ class blMenuKITSU(FramelessWindow):
         hbox_scene_selector.setStretchFactor(kitsu_project_selector, 1)
 
         kitsu_episode_selector = QtWidgets.QPushButton('Select Episode')
-        kitsu_episode_selector.setContentsMargins(10, 4, 10, 4)
+        kitsu_episode_selector.setContentsMargins(10, 0, 10, 0)
         set_selector_button_style(kitsu_episode_selector)
         self.UI_kitsu_episode_selector = kitsu_episode_selector
         hbox_scene_selector.addWidget(kitsu_episode_selector)
@@ -666,7 +690,7 @@ class blMenuKITSU(FramelessWindow):
         # action selector and proceed button
         hbox_action_selector = QtWidgets.QHBoxLayout()
         action_selector = QtWidgets.QPushButton('Select Action')
-        action_selector.setContentsMargins(10, 4, 10, 4)
+        action_selector.setContentsMargins(10, 0, 10, 0)
         set_selector_button_style(action_selector)
         self.UI_action_selector = action_selector
         # hbox_scene_selector.addWidget(kitsu_project_selector, alignment=QtCore.Qt.AlignLeft)
@@ -680,17 +704,21 @@ class blMenuKITSU(FramelessWindow):
         action_proceed_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         action_proceed_btn.clicked.connect(btn_ActionProceed_Clicked)
+        action_proceed_btn.setContentsMargins(10, 0, 10, 0)
         self.UI_action_proceed_btn = action_proceed_btn
         hbox_action_selector.addWidget(action_proceed_btn)
-        hbox_action_selector.addSpacing(4)
         hbox_action_selector.setStretchFactor(action_proceed_btn, 1)
 
         flapi_vbox1.addLayout(hbox_action_selector)
+
+        terminal = TerminalWidget()
+        self.UI_terminal = terminal
 
         vbox = QtWidgets.QVBoxLayout(window)
         vbox.setContentsMargins(20, 20, 20, 20)
         vbox.addLayout(vbox1)
         vbox.addLayout(flapi_vbox1)
+        vbox.addWidget(terminal)
 
         exit_btn = QtWidgets.QPushButton('Exit', window)
         exit_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -705,6 +733,9 @@ class blMenuKITSU(FramelessWindow):
         self.setLayout(vbox)
 
         return window
+
+    def process_terminal_messages(self):
+        self.UI_terminal.append('hello')
 
     def populate_actions_list(self):
         actions_menu = QtWidgets.QMenu(self)
@@ -757,6 +788,7 @@ class blMenuKITSU(FramelessWindow):
         self.UI_kitsu_episode_selector.setText(episode.get('name'))
 
     def close_application(self):
+        self.framework.save_prefs()
         self.terminate_loops()
         if self.bl_connector:
             self.bl_connector.fl_disconnect()
