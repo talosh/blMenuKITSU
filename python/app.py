@@ -886,8 +886,10 @@ class blMenuKITSU(FramelessWindow):
             finish_action()
             return
         
-        print (self.kitsu_status)
-        print (self.bl_status)
+        if (self.kitsu_status == 'Diconnected') or (self.bl_status == 'Disconnected'):
+            self.showMessageBox.emit("Kitsu and Flapi both has to be connected")
+            finish_action()
+            return
 
         pprint (self.current_action)
         time.sleep(1)
