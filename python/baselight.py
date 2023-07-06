@@ -70,11 +70,13 @@ class appBaselightConnector(object):
         self.log_debug('flapi token: %s' % self.flapi_key)
 
         try:
+            self.log_debug('creating Flapi connection object')
             self.conn = flapi.Connection(
                 self.flapi_host,
                 username=self.flapi_user,
                 token=self.flapi_key
             )
+            self.log_debug('trying to connect to: %s' % self.flapi_host)
             self.conn.connect()
             jobs = self.conn.JobManager.get_jobs(self.flapi_host)
             self.log_debug('connected to %s' % self.flapi_host)
