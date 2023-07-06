@@ -54,7 +54,7 @@ class TerminalWidget(QtWidgets.QPlainTextEdit):
         self.setFixedHeight(80)
         self.setStyleSheet("""
             QPlainTextEdit {
-                color: #889800;
+                color: #888888;
                 background-color: #373737;
                 border: 1px solid #989898;
                 border-radius: 4px;
