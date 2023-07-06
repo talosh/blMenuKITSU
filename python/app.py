@@ -95,6 +95,7 @@ class TerminalWidget(QtWidgets.QPlainTextEdit):
 class blMenuKITSU(FramelessWindow):
     # Define a custom signal
     allEventsProcessed = QtCore.pyqtSignal()
+    showMessageBox = QtCore.pyqtSignal(str)
 
     class MainLoop(QtCore.QThread):
         populate_project_list = QtCore.pyqtSignal()
@@ -118,7 +119,6 @@ class blMenuKITSU(FramelessWindow):
         self.framework = kwargs.get('framework')
         self.prefs = self.framework.prefs
         self.name = self.__class__.__name__
-        self.mbox = self.framework.mbox
 
         # set intermediate status
         self.kitsu_status = 'Ilde'
@@ -130,10 +130,20 @@ class blMenuKITSU(FramelessWindow):
         self.kitsu_current_project = {}
         self.kitsu_current_episode = {}
 
+        self.defined_actions = [
+            {'code': 1, 'name': 'Baselight Scene to Kitsu'},
+            {'code': 2, 'name': 'Render and Update Thumbnails'}
+        ]
+        self.current_action = {'code': 0, 'name': 'Select Action'}
+        self.action_thread = None
+        self.processing = False
+
         # Connect the signal to the slot
         self.allEventsProcessed.connect(self.on_allEventsProcessed)
         # A flag to check if all events have been processed
         self.allEventsFlag = False
+
+        self.showMessageBox.connect(self.on_showMessageBox)
 
         self.main_window()
         self.setStyleSheet("background-color: rgb(49, 49, 49);")
@@ -154,7 +164,9 @@ class blMenuKITSU(FramelessWindow):
 
         self.main_loop = self.MainLoop(self)
         self.main_loop.populate_project_list.connect(self.populate_project_list)
+
         self.main_loop.start()
+        
 
         QtCore.QTimer.singleShot(0, self.after_show)
         self.populate_actions_list()
@@ -171,9 +183,34 @@ class blMenuKITSU(FramelessWindow):
     def on_allEventsProcessed(self):
         self.allEventsFlag = True
 
+    def on_showMessageBox(self, message):
+        mbox = QtWidgets.QMessageBox()
+        mbox.setWindowFlags(QtCore.Qt.Tool)
+        mbox.setStyleSheet("""
+            QMessageBox {
+                background-color: #313131;
+                color: #9a9a9a;
+                text-align: center;
+            }
+            QMessageBox QPushButton {
+                width: 80px;
+                height: 24px;
+                color: #9a9a9a;
+                background-color: #424142;
+                border-top: 1px inset #555555;
+                border-bottom: 1px inset black
+            }
+            QMessageBox QPushButton:pressed {
+                font:italic;
+                color: #d9d9d9
+            }
+        """)
+        mbox.setText(message)
+        mbox.exec_()
+
     def after_show(self):
-        # self.setMinimumSize(self.size())
-        # self.setFixedHeight(self.size().height())
+        self.setMinimumSize(self.size())
+        self.setFixedHeight(self.size().height())
         try:
             self.framework.load_prefs()
             self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
@@ -239,8 +276,7 @@ class blMenuKITSU(FramelessWindow):
 
             self.bl_connector.fl_create_kitsu_menu()
         except Exception as e:
-            self.mbox.setText(pformat(e))
-            self.mbox.exec_()
+            self.showMessageBox.emit(pformat(e))
 
     def main_window(self):
 
@@ -272,15 +308,6 @@ class blMenuKITSU(FramelessWindow):
         # pyinstaller resources path setting
         base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         eye_icon_path = os.path.join(base_path, 'resources', 'eye.png')
-
-        '''
-        self.kitsu_host_text = self.kitsu_host
-        self.kitsu_user_text = self.kitsu_user
-        self.kitsu_pass_text = self.kitsu_pass
-        self.flapi_host_text = self.flapi_host
-        self.flapi_user_text = self.flapi_user
-        self.flapi_key_text = self.flapi_key
-        '''
 
         self.kitsu_host_text = ''
         self.kitsu_user_text = ''
@@ -412,14 +439,26 @@ class blMenuKITSU(FramelessWindow):
             )
 
         def btn_ActionProceed_Clicked():
-            pass
+            if not self.processing:
+                self.UI_action_proceed_btn.setText('Stop')
+                self.processing = True
+                self.action_thread = threading.Thread(target=self.process_action)
+                self.action_thread.daemon = True
+                self.action_thread.start()
+            else:
+                self.UI_action_proceed_btn.setText('Stopping...')
+                self.processing = False
+                self.log('stopping...')
+                if self.action_thread is not None:
+                    self.action_thread.join()
+                self.UI_action_proceed_btn.setText('Proceed')
 
         # window = QtWidgets.QWidget()
         window = self
         window.setWindowTitle(self.framework.app_name)
         window.setStyleSheet('background-color: #313131')
         window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        window.setMinimumSize(480, 800)
+        window.setMinimumSize(520, 800)
         # screen_res = QtWidgets.QDesktopWidget().screenGeometry()
         # window.move((screen_res.width()/2)-150, (screen_res.height() / 2) - 180)
 
@@ -730,7 +769,7 @@ class blMenuKITSU(FramelessWindow):
 
         action_proceed_btn = QtWidgets.QPushButton('Proceed', window)
         action_proceed_btn.setFocusPolicy(QtCore.Qt.StrongFocus)
-        action_proceed_btn.setMinimumSize(100, 28)
+        action_proceed_btn.setMinimumSize(80, 28)
         action_proceed_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         action_proceed_btn.clicked.connect(btn_ActionProceed_Clicked)
@@ -789,10 +828,7 @@ class blMenuKITSU(FramelessWindow):
 
     def populate_actions_list(self):
         actions_menu = QtWidgets.QMenu(self)
-        actions = [
-            {'code': 1, 'name': 'Baselight Scene to Kitsu'},
-            {'code': 2, 'name': 'Kitsu markers to Baselight'}
-        ]
+        actions = self.defined_actions
         for a in sorted(actions, key=lambda x: x['code']):
             action = actions_menu.addAction(a.get('name'))
             x = lambda chk=False, a=a: self.select_action(a)
@@ -836,6 +872,26 @@ class blMenuKITSU(FramelessWindow):
         self.kitsu_current_episode = dict(episode)
         pprint (episode)
         self.UI_kitsu_episode_selector.setText(episode.get('name'))
+
+    def process_action(self):
+        def finish_action():
+            self.processing = False
+            self.log(f'Done with "{action_name}"')
+            self.UI_action_proceed_btn.setText('Proceed')
+
+        action_name = self.current_action.get('name')
+        action_code = self.current_action.get('code')
+        if not action_code > 0:
+            self.showMessageBox.emit("Please select action to perform")
+            finish_action()
+            return
+        
+        print (self.kitsu_status)
+        print (self.bl_status)
+
+        pprint (self.current_action)
+        time.sleep(1)
+        finish_action()
 
     def close_application(self):
         self.framework.save_prefs()
