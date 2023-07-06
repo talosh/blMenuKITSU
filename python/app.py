@@ -96,6 +96,7 @@ class blMenuKITSU(FramelessWindow):
     # Define a custom signal
     allEventsProcessed = QtCore.pyqtSignal()
     showMessageBox = QtCore.pyqtSignal(str)
+    setText = QtCore.pyqtSignal(dict)
 
     class MainLoop(QtCore.QThread):
         populate_project_list = QtCore.pyqtSignal()
@@ -131,19 +132,23 @@ class blMenuKITSU(FramelessWindow):
         self.kitsu_current_episode = {}
 
         self.defined_actions = [
-            {'code': 1, 'name': 'Baselight Scene to Kitsu'},
-            {'code': 2, 'name': 'Render and Update Thumbnails'}
+            {'code': 1, 
+                'name': 'Baselight Scene to Kitsu',
+                'method': self.baselight_scene_to_kitsu},
+            {'code': 2,
+             'name': 'Render and Update Thumbnails',
+             'method': self.render_update_thumbnails}
         ]
         self.current_action = {'code': 0, 'name': 'Select Action'}
         self.action_thread = None
         self.processing = False
 
-        # Connect the signal to the slot
-        self.allEventsProcessed.connect(self.on_allEventsProcessed)
         # A flag to check if all events have been processed
         self.allEventsFlag = False
-
+        # Connect the signal to the slot
+        self.allEventsProcessed.connect(self.on_allEventsProcessed)
         self.showMessageBox.connect(self.on_showMessageBox)
+        self.setText.connect(self.on_setText)
 
         self.main_window()
         self.setStyleSheet("background-color: rgb(49, 49, 49);")
@@ -151,7 +156,7 @@ class blMenuKITSU(FramelessWindow):
 
         self.loops = []
         self.threads = True
-        self.loops.append(threading.Thread(target=self.process_terminal_messages))
+        self.loops.append(threading.Thread(target=self.process_messages))
         self.loops.append(threading.Thread(target=self.kitsu_loop, args=(8, )))
 
         # self.loops.append(threading.Thread(target=self.cache_short_loop, args=(8, )))
@@ -207,6 +212,9 @@ class blMenuKITSU(FramelessWindow):
         """)
         mbox.setText(message)
         mbox.exec_()
+
+    def on_setText(self, item):
+        pprint (item)
 
     def after_show(self):
         self.setMinimumSize(self.size())
@@ -439,6 +447,7 @@ class blMenuKITSU(FramelessWindow):
             )
 
         def btn_ActionProceed_Clicked():
+            self.framework.save_prefs()
             if not self.processing:
                 self.UI_action_proceed_btn.setText('Stop')
                 self.processing = True
@@ -803,7 +812,7 @@ class blMenuKITSU(FramelessWindow):
 
         return window
 
-    def process_terminal_messages(self):
+    def process_messages(self):
         while self.threads:
             try:
                 item = self.framework.message_queue.get_nowait()
@@ -815,12 +824,25 @@ class blMenuKITSU(FramelessWindow):
             if item is None:
                 time.sleep(0.05)
                 continue
-            if not isinstance(item, str):
+            if not isinstance(item, dict):
                 self.framework.message_queue.task_done()
                 time.sleep(0.05)
                 continue
+            
+            item_type = item.get('type')
+            if not item_type:
+                self.message_queue.task_done()
+                time.sleep(0.05)
+                continue
+            elif item_type == 'console':
+                message = item.get('message')
+                self.UI_terminal.append(message)
+            elif item_type == 'setText':
+                self.setText.emit(item)
             else:
-                self.UI_terminal.append(item)
+                self.message_queue.task_done()
+                time.sleep(0.05)
+                continue
             
             self.framework.message_queue.task_done()
             time.sleep(0.05)
@@ -881,6 +903,8 @@ class blMenuKITSU(FramelessWindow):
 
         action_name = self.current_action.get('name')
         action_code = self.current_action.get('code')
+        action_method = self.current_action.get('method')
+
         if not action_code > 0:
             self.showMessageBox.emit("Please select action to perform")
             finish_action()
@@ -891,9 +915,20 @@ class blMenuKITSU(FramelessWindow):
             finish_action()
             return
 
-        pprint (self.current_action)
-        time.sleep(1)
+        bl_path = self.prefs.get('bl_path')
+
+        if action_method:
+            action_method(bl_path)
+
         finish_action()
+
+    def baselight_scene_to_kitsu(self, bl_path):
+        scene_path = self.bl_connector.fl_get_scene_path(bl_path)
+        print (scene_path)
+
+    def render_update_thumbnails(self, bl_path):
+        scene_path = self.bl_connector.fl_get_scene_path(bl_path)
+        print (scene_path)
 
     def close_application(self):
         self.framework.save_prefs()

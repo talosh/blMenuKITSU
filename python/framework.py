@@ -112,7 +112,8 @@ class AppFramework(object):
             message = f'[{self.bundle_name}] {str(message)}'
             print (message)
             if self.message_queue.qsize() < self.max_message_queue_size:
-                self.message_queue.put(message)
+                item = {'type': 'console', 'message': message}
+                self.message_queue.put(item)
         except:
             pass
 
@@ -122,7 +123,8 @@ class AppFramework(object):
                 message = f'[DEBUG {self.bundle_name}] {str(message)}'
                 print (message)
                 if self.message_queue.qsize() < self.max_message_queue_size:
-                    self.message_queue.put(message)
+                    item = {'type': 'console', 'message': message}
+                    self.message_queue.put(item)
             except:
                 pass
 
