@@ -105,12 +105,13 @@ class AppFramework(object):
         self.mbox = self.setup_message_box()
 
         self.message_queue = queue.Queue()
+        self.max_message_queue_size = 2048
 
     def log(self, message):
         try:
             message = f'[{self.bundle_name}] {str(message)}'
             print (message)
-            if self.message_queue.qsize() < 256:
+            if self.message_queue.qsize() < self.max_message_queue_size:
                 self.message_queue.put(message)
         except:
             pass
@@ -120,7 +121,7 @@ class AppFramework(object):
             try:
                 message = f'[DEBUG {self.bundle_name}] {str(message)}'
                 print (message)
-                if self.message_queue.qsize() < 256:
+                if self.message_queue.qsize() < self.max_message_queue_size:
                     self.message_queue.put(message)
             except:
                 pass
