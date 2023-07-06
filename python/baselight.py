@@ -70,6 +70,11 @@ class appBaselightConnector(object):
         self.log_debug('flapi token: %s' % self.flapi_key)
 
         try:
+            self.framework.message_queue.put(
+                {'type': 'setText',
+                'widget': '',
+                'text': ''}
+            )
             self.log_debug('creating Flapi connection object')
             self.conn = flapi.Connection(
                 self.flapi_host,
@@ -162,3 +167,59 @@ class appBaselightConnector(object):
         menu_item_2 = conn.MenuItem.create("Menu Item 2")
         menu_item_2.connect("MenuItemSelected", onMenuItem2Selected)
         holder_menu.add_item(menu_item_2)
+
+    def fl_get_scene_path(self, blpath):
+        flapi = self.flapi
+        try:
+            blpath_components = blpath.split(':')
+            bl_hostname = blpath_components[0]
+            bl_jobname = blpath_components[1]
+            bl_scene_name = blpath_components[-1]
+            bl_scene_path = ':'.join(blpath_components[2:])
+            bl_scenes_folder = ''.join(blpath_components[2:-1])
+
+            if '*' in bl_scene_name:
+                # find the most recent scene
+                import re
+                self.log('finding most recent baselight scene for pattern: %s' % blpath)
+                existing_scenes = self.conn.JobManager.get_scenes(bl_hostname, bl_jobname, bl_scenes_folder)
+                matched_scenes = []
+                for scene_name in existing_scenes:
+                    if re.findall(bl_scene_name, scene_name):
+                        matched_scenes.append(scene_name)
+
+                if not matched_scenes:
+                    self.log('no matching scenes found for: %s' % blpath)
+                    return None
+                else:
+                    # TODO
+                    # this to be changed to actually checking the most recently modified scene
+                    # instead of just plain alphabetical sorting and taking the last one
+
+                    scene_name = sorted(matched_scenes)[-1]
+                    self.log('Alphabetically recent scene: %s' % scene_name)
+                    bl_scene_path = bl_scenes_folder + ':' + scene_name
+                    blpath = bl_hostname + ':' + bl_jobname + ':' + bl_scene_path
+
+            else:
+                # we have full scene path and need to check if scene exists
+
+                self.log('checking baselight scene: %s' % blpath)
+
+                if not self.conn.JobManager.scene_exists(bl_hostname, bl_jobname, bl_scene_path):
+                    self.log('baselight scene: %s does not exist' % blpath)
+                    return None
+                else:
+                    self.log('baselight scene: %s exists' % blpath)
+
+            
+            try:
+                scene_path = self.conn.Scene.parse_path(blpath)
+            except flapi.FLAPIException as ex:
+                self.log('Can not parse scene: %s' % blpath)
+                return None
+
+            return scene_path
+        except:
+            self.log('unable to get scene path from: %s' % blpath)
+            return None
