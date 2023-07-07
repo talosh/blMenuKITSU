@@ -72,8 +72,8 @@ class appBaselightConnector(object):
         try:
             self.framework.message_queue.put(
                 {'type': 'setText',
-                'widget': '',
-                'text': ''}
+                'widget': 'UI_lbl_FlapiStatus',
+                'text': 'Connecting...'}
             )
             self.log_debug('creating Flapi connection object')
             self.conn = flapi.Connection(
@@ -87,14 +87,20 @@ class appBaselightConnector(object):
             self.log_debug('connected to %s' % self.flapi_host)
         except flapi.FLAPIException as e:
             if msg:
-                self.mbox.setText(pformat(e))
-                self.mbox.exec_()
+                self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': pformat(e)}
+                )
             self.conn = None
+            return None
         except Exception as e:
             if msg:
-                self.mbox.setText(pformat(e))
-                self.mbox.exec_()
+                self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': pformat(e)}
+                )
             self.conn = None
+            return None
 
     def fl_disconnect(self, *args, **kwargs):
         msg = kwargs.get('msg')
