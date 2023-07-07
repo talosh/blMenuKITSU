@@ -99,7 +99,7 @@ class blMenuKITSU(FramelessWindow):
     setText = QtCore.pyqtSignal(dict)
 
     class MainLoop(QtCore.QThread):
-        populate_project_list = QtCore.pyqtSignal()
+        populateProjectList = QtCore.pyqtSignal()
 
         def run(self):
             parent = self.parent()
@@ -108,7 +108,7 @@ class blMenuKITSU(FramelessWindow):
             while parent.threads:
                 if pformat(prev_kitsu_data) != pformat(parent.framework.kitsu_data):
                     prev_kitsu_data = dict(parent.framework.kitsu_data)
-                    self.populate_project_list.emit()
+                    self.populateProjectList.emit()
                     # pprint (parent.framework.kitsu_data.get('active_projects'))
                 time.sleep(0.1)
             # Do some work...
@@ -168,11 +168,9 @@ class blMenuKITSU(FramelessWindow):
             loop.start()
 
         self.main_loop = self.MainLoop(self)
-        self.main_loop.populate_project_list.connect(self.populate_project_list)
-
+        self.main_loop.populateProjectList.connect(self.populate_project_list)
         self.main_loop.start()
         
-
         QtCore.QTimer.singleShot(0, self.after_show)
         self.populate_actions_list()
 
@@ -214,11 +212,93 @@ class blMenuKITSU(FramelessWindow):
         mbox.exec_()
 
     def on_setText(self, item):
-        pprint (item)
+        widget_name = item.get('widget', 'unknown')
+        text = item.get('text', 'unknown')
+        if hasattr(self, widget_name):
+            getattr(self, widget_name).setText(text)
+            if widget_name.endswith('Status'):
+                self.UI_setLabelColour(getattr(self, widget_name))
+        self.processEvents()
 
-    def after_show(self):
-        self.setMinimumSize(self.size())
-        self.setFixedHeight(self.size().height())
+    def connect_to_kitsu(self):
+        def connect_to_kitsu_thread(self):
+            try:
+                self.framework.load_prefs()
+                self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
+                self.kitsu_user = self.prefs.get('kitsu_user', 'user@host')
+                self.kitsu_pass = ''
+                encoded_kitsu_pass = self.prefs.get('kitsu_pass', '')
+                if encoded_kitsu_pass:
+                    self.kitsu_pass = base64.b64decode(encoded_kitsu_pass).decode("utf-8")
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_KitsuHost',
+                    'text': self.kitsu_host}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_KitsuUser',
+                    'text': self.kitsu_user}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_KitsuPass',
+                    'text': self.kitsu_pass}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_lbl_KitsuStatus',
+                    'text': 'Connecting...'}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_kitsu_connect_btn',
+                    'text': 'Stop'}
+                )
+
+                self.kitsu_connector = appKitsuConnector(self.framework)
+
+                if self.kitsu_connector.user:
+                    self.kitsu_status = 'Connected'
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_lbl_KitsuStatus',
+                        'text': 'Connected'}
+                    )
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_kitsu_connect_btn',
+                        'text': 'Disconnect'}
+                    )
+                else:
+                    self.kitsu_status = 'Disconnected'
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_lbl_KitsuStatus',
+                        'text': 'Disconnected'}
+                    )
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_kitsu_connect_btn',
+                        'text': 'Connect'}
+                    )
+
+            except Exception as e:
+                self.framework.message_queue.put(
+                        {'type': 'mbox',
+                        'message': pformat(e)}
+                )
+
+        connect_thread = threading.Thread(target=connect_to_kitsu_thread, args=(self, ))
+        connect_thread.daemon = True
+        connect_thread.start()
+
+        '''
         try:
             self.framework.load_prefs()
             self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
@@ -263,28 +343,107 @@ class blMenuKITSU(FramelessWindow):
                 self.UI_kitsu_connect_btn.setText('Connect')
 
             self.processEvents()
-
-            self.UI_lbl_FlapiStatus.setText('Connecting...')
-            self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
-            self.processEvents()
-
-            self.bl_connector = appBaselightConnector(self.framework)
-
-            if self.bl_connector.conn:
-                self.bl_status = 'Connected'
-                self.UI_lbl_FlapiStatus.setText('Connected')
-                self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
-                self.UI_flapi_connect_btn.setText('Disconnect')
-            else:
-                self.bl_status = 'Disconnected'
-                self.UI_lbl_FlapiStatus.setText('Disconnected')
-                self.UI_setLabelColour(self.UI_lbl_FlapiStatus)
-                self.UI_flapi_connect_btn.setText('Connect')
-            self.processEvents()
-
-            self.bl_connector.fl_create_kitsu_menu()
         except Exception as e:
             self.showMessageBox.emit(pformat(e))
+        '''
+
+    def connect_to_flapi(self):
+        def connect_to_flapi_thread(self):
+            try:
+                self.flapi_host = self.prefs.get('flapi_host', 'localhost')
+                self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+                self.flapi_pass = ''
+                encoded_flapi_pass = self.prefs.get('flapi_pass', '')
+                if encoded_flapi_pass:
+                    self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
+                self.flapi_key = self.prefs.get('flapi_key', '')
+                self.flapi_scenepath = self.prefs.get('bl_path', '')
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_FlapiHost',
+                    'text': self.flapi_host}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_FlapiUser',
+                    'text': self.flapi_user}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_FlapiPass',
+                    'text': self.flapi_pass}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_FlapiKey',
+                    'text': self.flapi_key}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_txt_FlapiScenePath',
+                    'text': self.flapi_scenepath}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_lbl_FlapiStatus',
+                    'text': 'Connecting...'}
+                )
+
+                self.framework.message_queue.put(
+                    {'type': 'setText',
+                    'widget': 'UI_flapi_connect_btn',
+                    'text': 'Stop'}
+                )
+
+                self.bl_connector = appBaselightConnector(self.framework)
+
+                if self.bl_connector.conn:
+                    self.bl_status = 'Connected'
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_lbl_FlapiStatus',
+                        'text': 'Connected'}
+                    )
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_flapi_connect_btn',
+                        'text': 'Disconnect'}
+                    )
+                else:
+                    self.bl_status = 'Disconnected'
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_lbl_FlapiStatus',
+                        'text': 'Disconnected'}
+                    )
+                    self.framework.message_queue.put(
+                        {'type': 'setText',
+                        'widget': 'UI_flapi_connect_btn',
+                        'text': 'Connect'}
+                    )
+
+                # self.bl_connector.fl_create_kitsu_menu()
+            except Exception as e:
+                self.framework.message_queue.put(
+                        {'type': 'mbox',
+                        'message': pformat(e)}
+                )
+
+        connect_thread = threading.Thread(target=connect_to_flapi_thread, args=(self, ))
+        connect_thread.daemon = True
+        connect_thread.start()
+
+    def after_show(self):
+        self.setMinimumSize(self.size())
+        self.setFixedHeight(self.size().height())
+        self.connect_to_kitsu()
+        self.connect_to_flapi()
 
     def main_window(self):
 
@@ -586,8 +745,8 @@ class blMenuKITSU(FramelessWindow):
         kitsu_connect_btn.setStyleSheet('QPushButton {color: #9a9a9a; background-color: #424142; border-top: 1px inset #555555; border-bottom: 1px inset black}'
                                 'QPushButton:pressed {font:italic; color: #d9d9d9}')
         kitsu_connect_btn.clicked.connect(txt_KitsuConnect_Clicked)
-        if self.kitsu_status != 'Disconnected':
-            kitsu_connect_btn.setText('Disconnect')
+        # if self.kitsu_status != 'Disconnected':
+        #    kitsu_connect_btn.setText('Disconnect')
         self.UI_kitsu_connect_btn = kitsu_connect_btn
 
         hbox4 = QtWidgets.QHBoxLayout()
@@ -839,6 +998,8 @@ class blMenuKITSU(FramelessWindow):
                 self.UI_terminal.append(message)
             elif item_type == 'setText':
                 self.setText.emit(item)
+            elif item_type == 'mbox':
+                self.showMessageBox.emit(item.get('message'))
             else:
                 self.message_queue.task_done()
                 time.sleep(0.05)
