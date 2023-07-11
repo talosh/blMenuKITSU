@@ -26,7 +26,7 @@ class appBaselightConnector(object):
         self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
         self.flapi_key = self.prefs.get('flapi_key', '')
         self.conn = None
-        self.fl_connect()
+        # self.fl_connect()
     
     def log(self, message):
         self.framework.log('[' + self.name + '] ' + str(message))

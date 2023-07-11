@@ -6,6 +6,7 @@ import queue
 import time
 import threading
 import inspect
+import ctypes
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 
@@ -220,8 +221,8 @@ class blMenuKITSU(FramelessWindow):
                 self.UI_setLabelColour(getattr(self, widget_name))
         self.processEvents()
 
-    def connect_to_kitsu(self):
-        def connect_to_kitsu_thread(self):
+    def connect_to_kitsu(self, msg = False):
+        def connect_to_kitsu_thread(self, msg):
             try:
                 self.framework.load_prefs()
                 self.kitsu_host = self.prefs.get('kitsu_host', 'http://localhost/api/')
@@ -262,6 +263,10 @@ class blMenuKITSU(FramelessWindow):
                 )
 
                 self.kitsu_connector = appKitsuConnector(self.framework)
+                if self.kitsu_connector:
+                    self.kitsu_connector.get_user(msg)
+                    self.kitsu_connector.init_pipeline_data()
+                    self.kitsu_connector.scan_active_projects()
 
                 if self.kitsu_connector.user:
                     self.kitsu_status = 'Connected'
@@ -294,9 +299,10 @@ class blMenuKITSU(FramelessWindow):
                         'message': pformat(e)}
                 )
 
-        connect_thread = threading.Thread(target=connect_to_kitsu_thread, args=(self, ))
-        connect_thread.daemon = True
-        connect_thread.start()
+        self.kitsu_status = 'Connecting'
+        self.kitsu_connect_thread = threading.Thread(target=connect_to_kitsu_thread, args=(self, msg))
+        self.kitsu_connect_thread.daemon = True
+        self.kitsu_connect_thread.start()
 
         '''
         try:
@@ -347,9 +353,10 @@ class blMenuKITSU(FramelessWindow):
             self.showMessageBox.emit(pformat(e))
         '''
 
-    def connect_to_flapi(self):
-        def connect_to_flapi_thread(self):
+    def connect_to_flapi(self, msg = False):
+        def connect_to_flapi_thread(self, msg):
             try:
+                self.framework.load_prefs()
                 self.flapi_host = self.prefs.get('flapi_host', 'localhost')
                 self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
                 self.flapi_pass = ''
@@ -401,7 +408,13 @@ class blMenuKITSU(FramelessWindow):
                     'text': 'Stop'}
                 )
 
+                try:
+                    self.bl_connector.fl_disconnect()
+                    self.bl_connector = None
+                except:
+                    pass
                 self.bl_connector = appBaselightConnector(self.framework)
+                self.bl_connector.fl_connect(msg = msg)
 
                 if self.bl_connector.conn:
                     self.bl_status = 'Connected'
@@ -435,9 +448,10 @@ class blMenuKITSU(FramelessWindow):
                         'message': pformat(e)}
                 )
 
-        connect_thread = threading.Thread(target=connect_to_flapi_thread, args=(self, ))
-        connect_thread.daemon = True
-        connect_thread.start()
+        self.bl_status = 'Connecting'
+        self.bl_connect_thread = threading.Thread(target=connect_to_flapi_thread, args=(self, msg))
+        self.bl_connect_thread.daemon = True
+        self.bl_connect_thread.start()
 
     def after_show(self):
         self.setMinimumSize(self.size())
@@ -509,7 +523,12 @@ class blMenuKITSU(FramelessWindow):
             self.kitsu_pass_text = txt_KitsuPass.text()
 
         def txt_KitsuConnect_Clicked():
-            if not self.kitsu_connector.gazu_client:
+            if self.kitsu_status == 'Connecting':
+                self.terminate_thread(self.kitsu_connect_thread)
+                self.kitsu_status = 'Disconnected'
+                lbl_KitsuStatus.setText(self.kitsu_status)
+                kitsu_connect_btn.setText('Connect')
+            elif self.kitsu_status == 'Disconnected' or self.kitsu_status == 'Idle':
                 lbl_KitsuStatus.setText('Connecting...')
                 self.prefs['kitsu_host'] = self.kitsu_host_text
                 self.prefs['kitsu_user'] = self.kitsu_user_text
@@ -525,9 +544,10 @@ class blMenuKITSU(FramelessWindow):
                     kitsu_connect_btn.setText('Connect')
                     lbl_KitsuStatus.setText(self.kitsu_status)
             else:
-                self.kitsu_connector.gazu_client = None
-                self.kitsu_connector.user = None
-                self.kitsu_connector.user_name = None
+                if self.kitsu_connector:
+                    self.kitsu_connector.gazu_client = None
+                    self.kitsu_connector.user = None
+                    self.kitsu_connector.user_name = None
                 self.kitsu_status = 'Disconnected'
                 lbl_KitsuStatus.setText(self.kitsu_status)
                 kitsu_connect_btn.setText('Connect')
@@ -550,7 +570,12 @@ class blMenuKITSU(FramelessWindow):
             self.prefs['bl_path'] = self.flapi_scenepath_text
 
         def txt_FlapiConnect_Clicked():
-            if not self.bl_connector.conn:
+            if self.bl_status == 'Connecting':
+                self.terminate_thread(self.bl_connect_thread)
+                self.bl_status = 'Disconnected'
+                lbl_FlapiStatus.setText(self.bl_status)
+                flapi_connect_btn.setText('Connect')
+            elif self.bl_status == 'Disconnected' or self.bl_status == 'Idle':
                 flapi_connect_btn.setText('Connecting...')
                 self.flapi_host_text  = txt_FlapiHost.text()
                 self.prefs['flapi_host'] = self.flapi_host_text
@@ -558,11 +583,13 @@ class blMenuKITSU(FramelessWindow):
                 self.prefs['flapi_pass'] = base64.b64encode(self.flapi_pass_text.encode("utf-8")).decode("utf-8")
                 self.prefs['flapi_key'] = self.flapi_key_text
                 self.framework.save_prefs()
-                self.bl_connector.fl_connect(msg = True)
-                if self.bl_connector.conn:
-                    self.bl_status = 'Connected'
-                    lbl_FlapiStatus.setText(self.bl_status)
-                    flapi_connect_btn.setText('Disconnect')
+                self.bl_status = 'Connecting'
+                self.connect_to_flapi(msg = True)
+                if self.bl_connector:
+                    if self.bl_connector.conn:
+                        self.bl_status = 'Connected'
+                        lbl_FlapiStatus.setText(self.bl_status)
+                        flapi_connect_btn.setText('Disconnect')
                 else:
                     self.bl_status = 'Disconnected'
                     flapi_connect_btn.setText('Connect')
@@ -972,26 +999,27 @@ class blMenuKITSU(FramelessWindow):
         return window
 
     def process_messages(self):
+        loop_timeout = 0.001
         while self.threads:
             try:
                 item = self.framework.message_queue.get_nowait()
             except queue.Empty:
                 if not self.threads:
                     break
-                time.sleep(0.05)
+                time.sleep(loop_timeout)
                 continue
             if item is None:
-                time.sleep(0.05)
+                time.sleep(loop_timeout)
                 continue
             if not isinstance(item, dict):
                 self.framework.message_queue.task_done()
-                time.sleep(0.05)
+                time.sleep(loop_timeout)
                 continue
             
             item_type = item.get('type')
             if not item_type:
                 self.message_queue.task_done()
-                time.sleep(0.05)
+                time.sleep(loop_timeout)
                 continue
             elif item_type == 'console':
                 message = item.get('message')
@@ -1002,11 +1030,11 @@ class blMenuKITSU(FramelessWindow):
                 self.showMessageBox.emit(item.get('message'))
             else:
                 self.message_queue.task_done()
-                time.sleep(0.05)
+                time.sleep(loop_timeout)
                 continue
             
             self.framework.message_queue.task_done()
-            time.sleep(0.05)
+            time.sleep(loop_timeout)
         return
 
     def populate_actions_list(self):
@@ -1113,7 +1141,14 @@ class blMenuKITSU(FramelessWindow):
                 time.sleep(1)
                 continue
 
-            self.kitsu_connector.collect_pipeline_data()
+            if not self.kitsu_connector.user_name:
+                time.sleep(1)
+                continue
+            
+            try:
+                self.kitsu_connector.collect_pipeline_data()
+            except:
+                pass
 
             # projects_by_id = {x.get('id'):x for x in self.pipeline_data['active_projects']}
             
@@ -1190,6 +1225,25 @@ class blMenuKITSU(FramelessWindow):
             loop.join()
 
         self.main_loop.wait()
+
+    def terminate_thread(self, thread):
+        if not thread.is_alive():
+            return
+
+        exc = ctypes.py_object(SystemExit)
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), exc)
+
+        if res == 0:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': 'Terminating - Invalid thread id'}
+            )
+        elif res != 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': 'Terminating - PyThreadState_SetAsyncExc failed'}
+            )
 
     def loop_timeout(self, timeout, start):
         time_passed = int(time.time() - start)
