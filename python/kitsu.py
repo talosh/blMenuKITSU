@@ -32,9 +32,6 @@ class appKitsuConnector(object):
 
         self.mbox = self.framework.mbox
         # self.mbox = QtWidgets.QMessageBox()
-        self.get_user()
-        self.init_pipeline_data()
-        self.scan_active_projects()
 
         '''    
         try:
