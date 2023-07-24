@@ -86,8 +86,20 @@ class TerminalWidget(QtWidgets.QPlainTextEdit):
 
     @pyqtSlot(str)
     def append_slot(self, text):
-        self.appendPlainText(text)
-        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())  # Auto scroll to the bottom
+        try:
+            lines = text.split('\n')
+            for i, line in enumerate(lines):
+                if '\r' in line:
+                    self.moveCursor(QtGui.QTextCursor.End)
+                    self.moveCursor(QtGui.QTextCursor.StartOfLine, QtGui.QTextCursor.KeepAnchor)
+                    self.textCursor().removeSelectedText()
+                    self.appendPlainText(line.rstrip('\r'))
+                else:
+                    self.appendPlainText(line)
+
+            self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())  # Auto scroll to the bottom
+        except:
+            pass
 
     def append(self, text):
         # Emit the 'append_signal' with the text
@@ -1112,8 +1124,36 @@ class blMenuKITSU(FramelessWindow):
         finish_action()
 
     def baselight_scene_to_kitsu(self, bl_path):
+        if (not self.kitsu_current_project) or (not self.kitsu_current_episode):
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Please select Kitsu project and episode'}
+            )
+            return False
+        
+        baselight_scene_info = {}
+
         scene_path = self.bl_connector.fl_get_scene_path(bl_path)
-        print (scene_path)
+        if not scene_path:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to find Baselight scene: {bl_path}'}
+            )
+            return False
+        
+        baselight_scene_info['scene_path'] = scene_path
+
+        shots = self.bl_connector.get_baselight_scene_shots(scene_path)
+        if not shots:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to find any shots in scene: {bl_path}'}
+            )
+            return False
+
+        baselight_scene_info['shots'] = shots
+
+        print (shots)
 
     def render_update_thumbnails(self, bl_path):
         scene_path = self.bl_connector.fl_get_scene_path(bl_path)

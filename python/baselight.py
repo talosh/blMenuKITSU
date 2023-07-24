@@ -229,3 +229,92 @@ class appBaselightConnector(object):
         except:
             self.log('unable to get scene path from: %s' % blpath)
             return None
+
+    def get_baselight_scene_shots(self, scene_path):
+        flapi = self.flapi
+        conn = self.conn
+        log = self.log
+        log_debug = self.log_debug
+        blpath = self.conn.Scene.path_to_string(scene_path)
+        log ('---')
+        log ('--- Collecting metadata of Baselight shots in: %s' % blpath)
+            
+        if not conn:
+            return []
+
+        if not scene_path:
+            return []
+
+        try:
+            log('loading scene: %s' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path, { flapi.OPENFLAG_READ_ONLY } )
+        except flapi.FLAPIException as ex:
+            log( "Error loading scene: %s" % ex )
+            return []
+
+        baselight_shots = []
+
+        nshots = scene.get_num_shots()
+        log( "Found %d shot(s)" % nshots )
+
+        md_keys = set()
+        mddefns = scene.get_metadata_definitions()
+
+        for mdfn in mddefns:
+            md_keys.add(mdfn.Key)
+
+        if nshots > 0:
+            shots = scene.get_shot_ids(0, nshots)
+            for shot_ix, shot_inf in enumerate(shots):
+                # log( "\r Querying Baselight metadata for shot %d of %s" % (shot_ix + 1, nshots), end="" )
+                log( f'Querying Baselight metadata for shot {shot_ix + 1} of {nshots}')
+                # log.verbose("Shot %d:" % shot_ix)
+                shot = scene.get_shot(shot_inf.ShotId)
+                shot_md = shot.get_metadata(md_keys)
+                for key in md_keys:
+                    if type(shot_md[key]) is list:
+                        for list_ix, list_inf in enumerate(shot_md[key]):
+                            shot_md[key + '.' + str(list_ix)] = list_inf
+                        # print ('%15s: %s: %s:' % (key, type(shot_md[key]), shot_md[key]))
+                # shot_md = shot.get_metadata_strings(md_keys)
+                mark_ids = shot.get_mark_ids()
+                categories = shot.get_categories()
+
+                thumbnail_url = ''
+                # thumbnail_url = conn.ThumbnailManager.get_poster_uri(shot, 1, {'DCSpace': 'sRGB'})
+                # pprint (thumbnail_url)
+
+                baselight_shots.append(
+                    {
+                        'shot_ix': shot_ix + 1,
+                        'shot_id': shot_inf.ShotId,
+                        'mddefns': mddefns,
+                        'shot_md': shot_md,
+                        'mark_ids': mark_ids,
+                        'categories': categories,
+                        'thumbnail_url': thumbnail_url
+                    }
+                )
+
+                shot.release()
+
+        '''
+        test_tc = conn.Utilities.timecode_from_string('01:00:00:00')
+        pprint (test_tc)
+        pprint (str(test_tc))
+        pprint (dir(test_tc))
+        '''
+
+        '''
+        # show avaliable keys and their types
+        mddefns = scene.get_metadata_definitions()
+        for mdfn in mddefns:
+            print ('%15s: %s, %s' % (mdfn.Key, mdfn.Name, mdfn.Type))
+        cat_keys = scene.get_strip_categories()
+        pprint (cat_keys)
+        '''
+
+        scene.close_scene()
+        scene.release()
+
+        return baselight_shots
