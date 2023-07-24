@@ -1132,6 +1132,8 @@ class blMenuKITSU(FramelessWindow):
             return False
         
         baselight_scene_info = {}
+        baselight_scene_info['blpath'] = bl_path
+        baselight_scene_info['project_id'] = self.kitsu_current_project.get('id')
 
         scene_path = self.bl_connector.fl_get_scene_path(bl_path)
         if not scene_path:
@@ -1151,9 +1153,52 @@ class blMenuKITSU(FramelessWindow):
             )
             return False
 
-        baselight_scene_info['shots'] = shots
+        baselight_scene_info['baselight_shots'] = shots
 
-        print (shots)
+        kitsu_uid_metadata_obj = self.bl_connector.check_or_add_kitsu_metadata_definition(scene_path)    
+        baselight_scene_info['kitsu_uid_metadata_obj'] = kitsu_uid_metadata_obj
+
+        kitsu_sequence = self.kitsu_connector.get_kitsu_sequence(
+            self.kitsu_current_project,
+            self.kitsu_current_episode,
+            bl_path
+            )
+        
+        if not kitsu_sequence:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to find or create sequence in kitsu'}
+            )
+            return False
+
+        self.kitsu_connector.set_metadata_fields(self.kitsu_current_project)
+
+        baselight_scene_info['kitsu_sequence'] = kitsu_sequence
+        kitsu_shots = self.kitsu_connector.get_shots_for_sequence(kitsu_sequence)
+        baselight_scene_info['kitsu_shots'] = kitsu_shots
+
+        new_shots = self.kitsu_connector.update_and_get_new_shots(baselight_scene_info)
+        
+        if not new_shots:
+            return False
+        
+        newly_created_shots = []
+        for index, baselight_shot in enumerate(new_shots):
+            shot_name = self.kitsu_connector.create_kitsu_shot_name(baselight_shot)
+            shot_data = self.kitsu_connector.build_kitsu_shot_data(baselight_shot)
+            new_shot = self.kitsu_connector.create_new_shot(
+                self.kitsu_current_project,
+                kitsu_sequence,
+                shot_name,
+                shot_data
+            )
+            if new_shot:
+                self.log(f'Shot {new_shot.get("name")} ({index + 1} of {len(new_shots)}) created')
+                baselight_shot['kitsu_shot'] = new_shot
+                newly_created_shots.append(baselight_shot)
+
+
+
 
     def render_update_thumbnails(self, bl_path):
         scene_path = self.bl_connector.fl_get_scene_path(bl_path)

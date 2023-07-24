@@ -262,12 +262,13 @@ class appBaselightConnector(object):
 
         for mdfn in mddefns:
             md_keys.add(mdfn.Key)
-
+        
         if nshots > 0:
             shots = scene.get_shot_ids(0, nshots)
+            log('Querying Baselight metadata')
             for shot_ix, shot_inf in enumerate(shots):
                 # log( "\r Querying Baselight metadata for shot %d of %s" % (shot_ix + 1, nshots), end="" )
-                log( f'Querying Baselight metadata for shot {shot_ix + 1} of {nshots}')
+                log(f'Shot {shot_ix + 1} of {nshots}')
                 # log.verbose("Shot %d:" % shot_ix)
                 shot = scene.get_shot(shot_inf.ShotId)
                 shot_md = shot.get_metadata(md_keys)
@@ -318,3 +319,61 @@ class appBaselightConnector(object):
         scene.release()
 
         return baselight_shots
+
+    def check_or_add_kitsu_metadata_definition(self, scene_path):
+        flapi = self.flapi
+        conn = self.conn
+        log = self.log
+        log_debug = self.log_debug
+        blpath = self.conn.Scene.path_to_string(scene_path)
+        log ('---')
+        log ('--- Checking KITSU metadata in: %s' % blpath)
+
+        try:
+            log('Opening scene: %s' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path, { flapi.OPENFLAG_READ_ONLY } )
+        except flapi.FLAPIException as ex:
+            log( "Error opening scene: %s" % ex )
+            return None
+
+        md_names = {}
+        mddefns = scene.get_metadata_definitions()
+
+        for mdfn in mddefns:
+            md_names[mdfn.Name] = mdfn
+
+        if 'kitsu-uid' in md_names.keys():
+            log('kistu-uid metadata columnn already exists in scene: "%s"' % scene.get_scene_pathname())
+            scene.close_scene()
+            scene.release()
+            return md_names['kitsu-uid']
+
+        # the scene has no kitsu-id metadata defined
+        # try to re-open the scene in rw mode and add this definition
+        scene.close_scene()
+        scene.release()
+
+        try:
+            log('Trying to open scene: %s in read-write mode' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path )
+        except flapi.FLAPIException as ex:
+            '''
+            self.framework.message_queue.put(
+                        {'type': 'mbox',
+                        'message': f'Unable to open Baselight \
+                        scene for writing: {pformat(ex)}\n\
+                        Kitsu metadata will not be updated'}
+                
+                )
+            '''
+            log( "Error opening scene for writing: %s" % ex )
+            return None
+
+        log('Adding kitsu-uid metadata columnn to scene: "%s"' % scene.get_scene_pathname())
+        scene.start_delta('Add kitsu-id metadata column')
+        metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
+        scene.end_delta()
+        scene.save_scene()
+        scene.close_scene()
+        scene.release()
+        return metadata_obj

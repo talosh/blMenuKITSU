@@ -711,3 +711,542 @@ class appKitsuConnector(object):
     def resolve_storage_root(self):
         storage_root = self.prefs.get('storage_root')
         return storage_root
+
+    def get_kitsu_sequence(self, current_project, current_episode, bl_path):
+        def all_sequences_for_project():
+            all_sequences_for_project = []
+            try:
+                all_sequences_for_project = self.gazu.shot.all_sequences_for_project(current_project, client=self.gazu_client)
+                # self.pipeline_data['all_sequences_for_project'] = list(all_sequences_for_project)
+                # for entity in all_sequences_for_project:
+                #     self.pipeline_data['entitiy_keys'].add((entity.get('type'), entity.get('id')))
+                #     self.pipeline_data['entity_by_id'][entity.get('id')] = entity
+            except Exception as e:
+                self.log(pformat(e))
+            return all_sequences_for_project
+        # pprint (current_project)
+        # pprint (current_episode)
+
+        all_sequences = all_sequences_for_project()
+
+        current_episode_id = current_episode.get('id')
+        current_episode_sequences = []
+        for sequence in all_sequences:
+            if sequence.get('parent_id') == current_episode_id:
+                current_episode_sequences.append(sequence)
+
+        for sequence in current_episode_sequences:
+            data = sequence.get('data')
+            if data is None:
+                continue
+            if not isinstance(data, dict):
+                continue
+            if data.get('blpath') == bl_path:
+                return sequence
+        
+        bl_scene_name = 'DefaultScene'
+        try:
+            bl_scene_name = bl_path.split(':')[-1]
+        except Exception as e:
+            self.log(f'Unable to get scene name: {pformat(e)}')
+
+        for sequence in current_episode_sequences:
+            if sequence.get('name') == bl_scene_name:
+                return sequence
+
+        # try to create new sequence
+        new_sequence = {}
+        try:
+            new_sequence = self.gazu.shot.new_sequence(
+                current_project,
+                bl_scene_name,
+                episode=current_episode,
+                client=self.gazu_client
+            )
+        except Exception as e:
+            self.log(f'Unable to create sequence: {pformat(e)}')
+
+        return new_sequence
+
+    def get_shots_for_sequence(self, current_sequence):
+        kitsu_shots = []
+        try:
+            kitsu_shots = gazu.shot.all_shots_for_sequence(current_sequence, client=self.gazu_client)
+        except Exception as e:
+            self.log(f'Unable to get shots from kitsu sequence: {pformat(e)}')
+        return kitsu_shots
+    
+    def get_metadata_descriptors(self):
+        # currently hardcoded
+        return [
+            {
+                "name": "00.Shot-ID",
+                "kitsu_key": "00_shot_id",
+                "bl_metadata_key": "event",
+                "padding": 4,
+                "entity_type": "Shot"
+            },
+            {
+                "name": "01.Locator",
+                "kitsu_key": "01_locator",
+                "bl_metadata_name": "01.Locator",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "02.Prod-Opt-Notes",
+                "kitsu_key": "02_prod_otp_notes",
+                "bl_metadata_name": "02.Prod-Opt-Notes",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "03.Conform-Notes",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "04.Opt-Done",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "05.Has Speed Change",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "06.DL-Time-Est",
+                "kitsu_key": "06_dl_time_est",
+                "bl_metadata_name": "06.DL-Time-Est",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "07.DL-Needs-Prod-Atn",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "08.DL-Producer-Notes",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "09.EDL-event",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "10.Tape",
+                "kitsu_key": "10_tape",
+                "bl_metadata_key": "tape",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "11.Source TC Start",
+                "kitsu_key": "11_source_tc_start",
+                "bl_metadata_key": "srctc.0",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "12.Source TC End",
+                "kitsu_key": "12_source_tc_end",
+                "bl_metadata_key": "srctc.1",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "13.Record TC Start",
+                "kitsu_key": "13_record_tc_start",
+                "bl_metadata_key": "rectc.0",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "14.Record TC End",
+                "kitsu_key": "14_record_tc_end",
+                "bl_metadata_key": "rectc.1",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "15.Vers-in-Baselight",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "16.Vers-Prod-Final",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "17.Vendor",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "18.DL-Import-Date",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "19.EDL-Comment",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "21.Turnover-Package",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "22.Prod TC In",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "23.Prod TC Out",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "25.Rec-Frame",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "26.BL-Shot-Filename",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "27.VFX-Latest-Pub",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "28.DL-VFX-cost-est",
+                "kitsu_key": "28_dl_vfx_cost_est",
+                "bl_metadata_name": "28.DL-VFX-cost-est",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "29.DL-VFX-hours-est",
+                "kitsu_key": "29_dl_vfx_hours_est",
+                "bl_metadata_name": "29.DL-VFX-hours-est",
+                "entity_type": "Shot"
+            },
+            {
+                "name": "30.DL-VFX-ID",
+                "kitsu_key": "30_dl_vfx_id",
+                "bl_metadata_name": "vfx-id",
+                "entity_type": "Shot"
+            }
+        ]
+
+    def build_kitsu_shot_data(self, baselight_shot):
+        data = {}
+        md_descriptors = self.get_metadata_descriptors()
+        md_descriptors_by_bl_key = {}
+        for md_desc in md_descriptors:
+            bl_key = md_desc.get('bl_metadata_key')
+            if not bl_key:
+                bl_name = md_desc.get('bl_metadata_name')
+                if not bl_name:
+                    continue
+                else:
+                    mddefns = baselight_shot.get('mddefns')
+                    for md_def in mddefns:
+                        name = md_def.Name
+                        if name == bl_name:
+                            bl_key = md_def.Key
+                            md_descriptors_by_bl_key[bl_key] = md_desc
+                    continue
+            md_descriptors_by_bl_key[bl_key] = md_desc
+        shot_md = baselight_shot.get('shot_md')
+        for bl_key in md_descriptors_by_bl_key.keys():
+            kitsu_key = md_descriptors_by_bl_key[bl_key].get('kitsu_key')
+            value = str(shot_md.get(bl_key))
+            if 'padding' in md_descriptors_by_bl_key[bl_key].keys():
+                padding = md_descriptors_by_bl_key[bl_key].get('padding', 0)
+                value = value.zfill(padding)
+            data[kitsu_key] = value
+        return data
+
+    def update_and_get_new_shots(self, baselight_linked_sequence):
+        log = self.log
+        log_debug = self.log_debug
+        gazu = self.gazu
+        
+        log ('---')
+        log ('--- Populating Kitsu from baselight sequence ---')
+        log (baselight_linked_sequence.get('blpath'))
+
+        # shot = gazu.shot.get_shot('412aa6b2-5d30-49c1-84b8-631b8c15fd3c')
+        # pprint (shot)
+
+        blpath = baselight_linked_sequence.get('blpath')
+
+        kitsu_uid_metadata_obj = baselight_linked_sequence.get('kitsu_uid_metadata_obj')
+    
+        if not kitsu_uid_metadata_obj:
+            return None
+
+        baselight_shots = baselight_linked_sequence.get('baselight_shots')
+        project_dict = gazu.project.get_project(baselight_linked_sequence.get('project_id'), client=self.gazu_client)
+        kitsu_shots = baselight_linked_sequence.get('kitsu_shots')
+
+        kitsu_shot_uids = set()
+        for kitsu_shot in kitsu_shots:
+            kitsu_shot_uids.add(kitsu_shot.get('id'))
+
+        new_shots = []
+        
+        log('Looking for metadata updates...')
+        for shot_ix, baselight_shot in enumerate(baselight_shots):        
+            log( "Checking KITSU metadata against Baselight for shot %d of %s" % (shot_ix + 1, len(baselight_shots)))
+            shot_md = baselight_shot.get('shot_md')
+            if not shot_md:
+                continue
+
+            bl_kitsu_uid = shot_md.get(kitsu_uid_metadata_obj.Key)
+            if bl_kitsu_uid in kitsu_shot_uids:
+
+                new_data = {}
+                bl_shot_data = self.build_kitsu_shot_data(baselight_shot)
+                kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid, client=self.gazu_client)
+                kitsu_shot_data = kitsu_shot.get('data', dict())
+
+                for data_key in bl_shot_data.keys():
+                    if kitsu_shot_data.get(data_key):
+                        continue
+                    else:
+                        if bl_shot_data.get(data_key):
+                            new_data[data_key] = bl_shot_data.get(data_key)
+
+                if not new_data:
+                    continue
+                
+                for new_data_key in new_data.keys():
+                    kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
+                kitsu_shot['data'] = kitsu_shot_data
+                log.info('updating shot: %s' % kitsu_shot.get('name'))
+                gazu.shot.update_shot(kitsu_shot, client=self.gazu_client)
+                pprint (new_data)
+                continue
+
+            else:
+                new_shots.append(baselight_shot)
+
+        return new_shots
+
+    def create_kitsu_shot_name(self, baselight_shot):
+        import uuid
+        shot_md = baselight_shot.get('shot_md')
+        if not shot_md:
+            return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
+        rectc_in = shot_md.get('rectc.0')
+        if not rectc_in:
+            return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
+        return str(rectc_in)
+
+
+    def build_kitsu_shot_data(self, baselight_shot):
+        data = {}
+        md_descriptors = self.get_metadata_descriptors()
+        md_descriptors_by_bl_key = {}
+        for md_desc in md_descriptors:
+            bl_key = md_desc.get('bl_metadata_key')
+            if not bl_key:
+                bl_name = md_desc.get('bl_metadata_name')
+                if not bl_name:
+                    continue
+                else:
+                    mddefns = baselight_shot.get('mddefns')
+                    for md_def in mddefns:
+                        name = md_def.Name
+                        if name == bl_name:
+                            bl_key = md_def.Key
+                            md_descriptors_by_bl_key[bl_key] = md_desc
+                    continue
+            md_descriptors_by_bl_key[bl_key] = md_desc
+        shot_md = baselight_shot.get('shot_md')
+        for bl_key in md_descriptors_by_bl_key.keys():
+            kitsu_key = md_descriptors_by_bl_key[bl_key].get('kitsu_key')
+            value = str(shot_md.get(bl_key))
+            if 'padding' in md_descriptors_by_bl_key[bl_key].keys():
+                padding = md_descriptors_by_bl_key[bl_key].get('padding', 0)
+                value = value.zfill(padding)
+            data[kitsu_key] = value
+        return data
+
+    def set_metadata_fields(self, project):
+        log = self.log
+        log_debug = self.log_debug
+
+        descriptors_api_path = '/data/projects/' + project.get('id') + '/metadata-descriptors'
+        project_descriptor_data = self.gazu.client.get(descriptors_api_path, client = self.gazu_client)
+        project_descriptor_names = [x['name'] for x in project_descriptor_data]
+        
+        for metadata_descriptor in self.get_metadata_descriptors():
+            metadata_descriptor_name = metadata_descriptor.get('name')
+            if not metadata_descriptor_name:
+                continue
+            if metadata_descriptor_name not in project_descriptor_names:
+                if metadata_descriptor_name.lower() in project_descriptor_names:
+                    continue
+                
+                data = {
+                    'choices': [],
+                    'for_client': False,
+                    'entity_type': 'Shot',
+                    'departments': []
+                }
+
+                for key in metadata_descriptor.keys():
+                    data[key] = metadata_descriptor[key]
+
+                log ('creating %s in %s' % (metadata_descriptor_name, project.get('name')))
+                self.gazu.client.post(descriptors_api_path, data, client = self.gazu_client)
+
+    def create_new_shot(self, project_dict, kitsu_sequence, shot_name, shot_data):
+        new_shot = None
+        try:
+            new_shot = self.gazu.shot.new_shot(
+                project_dict, 
+                kitsu_sequence, 
+                shot_name,
+                data = shot_data,
+                client=self.gazu_client
+                # data = {'00_shot_id': baselight_shot.get('shot_id')}
+            )
+        except Exception as e:
+            self.log(pformat(e))
+
+        return new_shot
+    
+        '''
+
+        # try to open baselight scene and fill the shots back in with kitsu-related metadata
+        flapi = import_flapi(config)
+        flapi_host = resolve_flapi_host(config, blpath)
+
+        conn = fl_connect(config, flapi, flapi_host)
+        if not conn:
+            return None
+        scene_path = fl_get_scene_path(config, flapi, conn, blpath)
+        if not scene_path:
+            return None
+
+        log.verbose( "Opening QueueManager connection" )
+
+        try:
+            log.verbose('Trying to open scene: %s in read-write mode' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path, {  flapi.OPENFLAG_DISCARD  })
+        except flapi.FLAPIException as ex:
+            log.error( "Error opening scene: %s" % ex )
+            return None
+
+
+        for baselight_shot in new_shots:
+            shot_name = create_kitsu_shot_name(config, baselight_shot)
+            shot_data = build_kitsu_shot_data(config, baselight_shot)
+
+            new_shot = gazu.shot.new_shot(
+                project_dict, 
+                baselight_linked_sequence, 
+                shot_name,
+                data = shot_data
+                # data = {'00_shot_id': baselight_shot.get('shot_id')}
+            )
+
+            pprint (shot_data)
+
+            shot_id = baselight_shot.get('shot_id')
+            shot = scene.get_shot(shot_id)
+
+            try:
+                qm = conn.QueueManager.create_local()
+            except flapi.FLAPIException as ex:
+                log.error( "Can not create queue manager: %s" % ex )
+                continue
+            try:
+                ex = conn.Export.create()
+                ex.select_shot(shot)
+                exSettings = flapi.StillExportSettings()
+                exSettings.ColourSpace = "sRGB"
+                exSettings.Format = "HD 1920x1080"
+                exSettings.Overwrite = flapi.EXPORT_OVERWRITE_REPLACE
+                exSettings.Directory = config.get('remote_temp_folder', '/var/tmp')
+                exSettings.Frames = flapi.EXPORT_FRAMES_FIRST 
+                # exSettings.Filename = "%{Job}/%{Clip}_%{TimelineFrame}"
+                exSettings.Filename = str(shot_id)
+                exSettings.Source = flapi.EXPORT_SOURCE_SELECTEDSHOTS
+
+                print ('')
+                # print ('Baselight sequence: %s' % blpath)
+                print ('Generating thumbnail for: "%s" Shot name: "%s"' % (blpath, shot_name))
+                log.verbose( "Submitting to queue" )
+                exportInfo = ex.do_export_still( qm, scene, exSettings)
+                waitForExportToComplete(qm, exportInfo)
+                del ex
+                print( "Closing QueueManager\n" )
+                qm.release()
+            except Exception as ex:
+                log.error( "Can not export thumbnail: %s" % ex )
+
+            file_list = remote_listdir(
+                config.get('remote_temp_folder', '/var/tmp'),
+                flapi_host.get('flapi_user'),
+                flapi_host.get('flapi_hostname')
+                )
+
+            thumbnail_file_name = str(shot_id) + '.jpg'
+            thumbnail_local_path = ''
+            if thumbnail_file_name in file_list:
+                # get it over here to upload thumbnail
+                thumbnail_remote_path = os.path.join(
+                    config.get('remote_temp_folder', '/var/tmp'),
+                    thumbnail_file_name
+                )
+                thumbnail_local_path = config.get('temp_folder', '/var/tmp')
+                if not thumbnail_local_path.endswith(os.path.sep):
+                    thumbnail_local_path = thumbnail_local_path + os.path.sep
+                rsync(
+                    flapi_host.get('flapi_user'),
+                    flapi_host.get('flapi_hostname'),
+                    thumbnail_remote_path,
+                    thumbnail_local_path
+                )
+                remote_rm(
+                    thumbnail_remote_path,
+                    flapi_host.get('flapi_user'),
+                    flapi_host.get('flapi_hostname')    
+                )
+            
+            if not thumbnail_local_path:
+                log.verbose('Unable generate thumbnail for %s' % shot_name)
+                continue
+
+            task_types = gazu.task.all_task_types()
+            shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
+            shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
+            task = gazu.task.new_task(new_shot, shot_task_types[0])
+            todo = gazu.task.get_task_status_by_short_name("todo")
+            comment = gazu.task.add_comment(task, todo, "Add thumbnail")
+
+            log.verbose('Adding preview on task "%s"' % shot_task_types[0].get('name'))
+            preview_file = gazu.task.add_preview(
+                task,
+                comment,
+                os.path.join(
+                    thumbnail_local_path,
+                    thumbnail_file_name
+                )
+            )
+
+            log.verbose('Uploading thumbnail for shot: "%s"' % shot_name)
+            gazu.task.set_main_preview(preview_file)
+            # gazu.task.remove_task(task)
+
+            try:
+                os.remove(thumbnail_local_path)
+            except:
+                pass
+
+            scene.start_delta('Add kitsu metadata to shot %s' % shot_name)
+            new_md_values = {
+                kitsu_uid_metadata_obj.Key: new_shot.get('id')
+            }
+
+            shot.set_metadata( new_md_values )
+
+            shot.release()
+
+            scene.end_delta()
+            scene.save_scene()
+            # shot = scene.get_shot(shot_inf.ShotId)
+
+
+        scene.save_scene()
+        scene.close_scene()
+        scene.release()
+        '''
