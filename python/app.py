@@ -1230,7 +1230,12 @@ class blMenuKITSU(FramelessWindow):
         kitsu_shots = self.kitsu_connector.get_shots_for_episode(
             self.kitsu_current_episode
         )
-        
+
+        baselight_shots = self.bl_connector.get_baselight_scene_shots(scene_path)
+
+        for baselight_shot in baselight_shots:
+            print (baselight_shot.get('thumbnail_url'))
+
 
     def close_application(self):
         self.framework.save_prefs()

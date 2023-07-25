@@ -786,7 +786,8 @@ class appKitsuConnector(object):
         return kitsu_shots
     
     def get_shots_for_episode(self, episode):
-        pprint (episode)
+        shots = self.gazu.shot.all_shots_for_episode(episode, client=self.gazu_client)
+        return shots
 
     def get_metadata_descriptors(self):
         # currently hardcoded

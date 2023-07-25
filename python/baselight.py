@@ -282,7 +282,7 @@ class appBaselightConnector(object):
                 categories = shot.get_categories()
 
                 thumbnail_url = ''
-                # thumbnail_url = conn.ThumbnailManager.get_poster_uri(shot, 1, {'DCSpace': 'sRGB'})
+                thumbnail_url = conn.ThumbnailManager.get_poster_uri(shot, {'DCSpace': 'sRGB'})
                 # pprint (thumbnail_url)
 
                 baselight_shots.append(
@@ -403,7 +403,7 @@ class appBaselightConnector(object):
 
         scene.start_delta('Add kitsu metadata to shots')
         log ('Adding kitsu metadata to Baselight shots')
-                
+
         for baselight_shot in baselight_shots:
             shot_id = baselight_shot.get('shot_id')
             shot = scene.get_shot(shot_id)
