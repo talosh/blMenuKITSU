@@ -753,6 +753,15 @@ class appKitsuConnector(object):
         for sequence in current_episode_sequences:
             if sequence.get('name') == bl_scene_name:
                 return sequence
+            
+        return None
+
+    def create_kitsu_sequence(self, current_project, current_episode, bl_path):
+        bl_scene_name = 'DefaultScene'
+        try:
+            bl_scene_name = bl_path.split(':')[-1]
+        except Exception as e:
+            self.log(f'Unable to get scene name: {pformat(e)}')
 
         # try to create new sequence
         new_sequence = {}
@@ -776,6 +785,9 @@ class appKitsuConnector(object):
             self.log(f'Unable to get shots from kitsu sequence: {pformat(e)}')
         return kitsu_shots
     
+    def get_shots_for_episode(self, episode):
+        pprint (episode)
+
     def get_metadata_descriptors(self):
         # currently hardcoded
         return [
@@ -1027,7 +1039,6 @@ class appKitsuConnector(object):
         if not rectc_in:
             return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
         return str(rectc_in)
-
 
     def build_kitsu_shot_data(self, baselight_shot):
         data = {}

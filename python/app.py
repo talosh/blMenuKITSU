@@ -1165,6 +1165,13 @@ class blMenuKITSU(FramelessWindow):
             )
         
         if not kitsu_sequence:
+            kitsu_sequence = self.kitsu_connector.create_kitsu_sequence(
+                        self.kitsu_current_project,
+                        self.kitsu_current_episode,
+                        bl_path
+                        )
+
+        if not kitsu_sequence:
             self.framework.message_queue.put(
                     {'type': 'mbox',
                     'message': f'Unable to find or create sequence in kitsu'}
@@ -1200,10 +1207,30 @@ class blMenuKITSU(FramelessWindow):
         if newly_created_shots:
             self.bl_connector.set_kitsu_metadata(scene_path, newly_created_shots)            
 
-
     def render_update_thumbnails(self, bl_path):
+        if (not self.kitsu_current_project) or (not self.kitsu_current_episode):
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Please select Kitsu project and episode'}
+            )
+            return False
+        
+        baselight_scene_info = {}
+        baselight_scene_info['blpath'] = bl_path
+        baselight_scene_info['project_id'] = self.kitsu_current_project.get('id')
+
         scene_path = self.bl_connector.fl_get_scene_path(bl_path)
-        print (scene_path)
+        if not scene_path:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to find Baselight scene: {bl_path}'}
+            )
+            return False
+        
+        kitsu_shots = self.kitsu_connector.get_shots_for_episode(
+            self.kitsu_current_episode
+        )
+        
 
     def close_application(self):
         self.framework.save_prefs()
