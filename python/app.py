@@ -1171,7 +1171,7 @@ class blMenuKITSU(FramelessWindow):
             )
             return False
 
-        self.kitsu_connector.set_metadata_fields(self.kitsu_current_project)
+        self.kitsu_connector.create_metadata_fields(self.kitsu_current_project)
 
         baselight_scene_info['kitsu_sequence'] = kitsu_sequence
         kitsu_shots = self.kitsu_connector.get_shots_for_sequence(kitsu_sequence)
@@ -1196,8 +1196,9 @@ class blMenuKITSU(FramelessWindow):
                 self.log(f'Shot {new_shot.get("name")} ({index + 1} of {len(new_shots)}) created')
                 baselight_shot['kitsu_shot'] = new_shot
                 newly_created_shots.append(baselight_shot)
-
-
+        
+        if newly_created_shots:
+            self.bl_connector.set_kitsu_metadata(scene_path, newly_created_shots)            
 
 
     def render_update_thumbnails(self, bl_path):

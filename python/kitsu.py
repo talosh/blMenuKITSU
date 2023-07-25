@@ -1058,7 +1058,7 @@ class appKitsuConnector(object):
             data[kitsu_key] = value
         return data
 
-    def set_metadata_fields(self, project):
+    def create_metadata_fields(self, project):
         log = self.log
         log_debug = self.log_debug
 

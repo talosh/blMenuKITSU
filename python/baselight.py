@@ -268,7 +268,7 @@ class appBaselightConnector(object):
             log('Querying Baselight metadata')
             for shot_ix, shot_inf in enumerate(shots):
                 # log( "\r Querying Baselight metadata for shot %d of %s" % (shot_ix + 1, nshots), end="" )
-                log(f'Shot {shot_ix + 1} of {nshots}')
+                log(f'Querying shot {shot_ix + 1} of {nshots}')
                 # log.verbose("Shot %d:" % shot_ix)
                 shot = scene.get_shot(shot_inf.ShotId)
                 shot_md = shot.get_metadata(md_keys)
@@ -377,3 +377,51 @@ class appBaselightConnector(object):
         scene.close_scene()
         scene.release()
         return metadata_obj
+    
+    def set_kitsu_metadata(self, scene_path, baselight_shots):
+        log = self.log
+        log_debug = self.log_debug
+        flapi = self.flapi
+        conn = self.conn
+
+        try:
+            log('Trying to open scene: %s in read-write mode' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path, {  flapi.OPENFLAG_DISCARD  })
+        except flapi.FLAPIException as ex:
+            log.error( "Error opening scene: %s" % ex )
+            return None
+        
+        kitsu_uid_metadata_obj = None
+        md_names = {}
+        mddefns = scene.get_metadata_definitions()
+        for mdfn in mddefns:
+            md_names[mdfn.Name] = mdfn
+        if 'kitsu-uid' in md_names.keys():
+            kitsu_uid_metadata_obj = md_names['kitsu-uid']
+        if not kitsu_uid_metadata_obj:
+            return None
+
+        scene.start_delta('Add kitsu metadata to shots')
+        log ('Adding kitsu metadata to Baselight shots')
+                
+        for baselight_shot in baselight_shots:
+            shot_id = baselight_shot.get('shot_id')
+            shot = scene.get_shot(shot_id)
+            kitsu_shot = baselight_shot.get('kitsu_shot')
+            if not kitsu_shot:
+                continue
+            kitsu_shot_id = kitsu_shot.get('id')
+            if not kitsu_shot_id:
+                continue
+
+            new_md_values = {
+                kitsu_uid_metadata_obj.Key: kitsu_shot_id
+            }
+
+            shot.set_metadata( new_md_values )
+            shot.release()
+
+        scene.end_delta()
+        scene.save_scene()
+        scene.close_scene()
+        scene.release()
