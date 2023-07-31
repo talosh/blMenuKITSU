@@ -5,7 +5,7 @@ import threading
 import inspect
 import re
 import traceback
-import getpass
+import base64
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 
@@ -23,13 +23,27 @@ class appBaselightConnector(object):
         self.log('waking up')
         self.flapi = self.import_flapi()
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
-        self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+        self.flapi_user = self.prefs.get('flapi_user', 'filmlight')
         self.flapi_key = self.prefs.get('flapi_key', '')
+        encoded_flapi_pass = self.prefs.get('flapi_pass', '')
+        if encoded_flapi_pass:
+            self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
         self.conn = None
         # self.fl_connect()
+
+        self.processing_flag = False
     
     def log(self, message):
-        self.framework.log('[' + self.name + '] ' + str(message))
+        try:
+            message = f'[{self.name}] {str(message)}'
+            print (message)
+            if self.framework.message_queue.qsize() < self.framework.max_message_queue_size:
+                item = {'type': 'console', 'message': message}
+                self.framework.message_queue.put(item)
+        except:
+            pass
+
+        # self.framework.log('[' + self.name + '] ' + str(message))
 
     def log_debug(self, message):
         self.framework.log_debug('[' + self.name + '] ' + str(message))
@@ -62,8 +76,11 @@ class appBaselightConnector(object):
         flapi = self.flapi
         
         self.flapi_host = self.prefs.get('flapi_host', 'localhost')
-        self.flapi_user = self.prefs.get('flapi_user', getpass.getuser())
+        self.flapi_user = self.prefs.get('flapi_user', 'filmlight')
         self.flapi_key = self.prefs.get('flapi_key', '')
+        encoded_flapi_pass = self.prefs.get('flapi_pass', '')
+        if encoded_flapi_pass:
+            self.flapi_pass = base64.b64decode(encoded_flapi_pass).decode("utf-8")
 
         self.log_debug('opening flapi connection to %s' % self.flapi_host)
         self.log_debug('flapi user: %s' % self.flapi_user)
@@ -334,7 +351,7 @@ class appBaselightConnector(object):
             scene = conn.Scene.open_scene( scene_path, { flapi.OPENFLAG_READ_ONLY } )
         except flapi.FLAPIException as ex:
             log( "Error opening scene: %s" % ex )
-            return None
+            return f'Error opening scene: {pformat(ex)}'
 
         md_names = {}
         mddefns = scene.get_metadata_definitions()
@@ -367,7 +384,7 @@ class appBaselightConnector(object):
                 )
             '''
             log( "Error opening scene for writing: %s" % ex )
-            return None
+            return f'Error opening scene for writing: {pformat(ex)}'
 
         log('Adding kitsu-uid metadata columnn to scene: "%s"' % scene.get_scene_pathname())
         scene.start_delta('Add kitsu-id metadata column')
@@ -388,8 +405,8 @@ class appBaselightConnector(object):
             log('Trying to open scene: %s in read-write mode' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
             scene = conn.Scene.open_scene( scene_path, {  flapi.OPENFLAG_DISCARD  })
         except flapi.FLAPIException as ex:
-            log.error( "Error opening scene: %s" % ex )
-            return None
+            log.error( "Error opening scene for writing: %s" % ex )
+            return f'Error opening scene for writing: {pformat(ex)}'
         
         kitsu_uid_metadata_obj = None
         md_names = {}
@@ -399,7 +416,7 @@ class appBaselightConnector(object):
         if 'kitsu-uid' in md_names.keys():
             kitsu_uid_metadata_obj = md_names['kitsu-uid']
         if not kitsu_uid_metadata_obj:
-            return None
+            return f'Error unable to find kitsu-uid metadata column in baselight scene: {self.conn.Scene.path_to_string(scene_path)}'
 
         scene.start_delta('Add kitsu metadata to shots')
         log ('Adding kitsu metadata to Baselight shots')
@@ -425,3 +442,237 @@ class appBaselightConnector(object):
         scene.save_scene()
         scene.close_scene()
         scene.release()
+
+        return True
+
+    def get_and_upload_thumbnails_from_kitsu_id(self, scene_path, kitsu_shots, kitsu_connector):
+        flapi = self.flapi
+        conn = self.conn
+        log = self.log
+        log_debug = self.log_debug
+        self.processing_flag = True
+
+        def waitForExportToComplete( qm, exportInfo ):
+            for msg in exportInfo.Log:
+                if (msg.startswith("Error")):
+                    log("Export Submission Failed.  %s" % msg);
+                    return
+
+            log( "Waiting on render job to complete" )
+            triesSinceChange = 0
+            lastProgress = -1
+            maxTries = 20
+            while True:
+                opstat = qm.get_operation_status( exportInfo.ID )
+                triesSinceChange +=1 
+                if opstat.Progress != lastProgress:
+                    triesSinceChange = 0
+                    lastProgress = opstat.Progress
+                dots = ""
+                if (triesSinceChange > 0):
+                    dots = "..."[:(triesSinceChange%3)+1]
+                else:
+                    pass
+                    # print("")
+
+                # print( "\r  Status: {Status} {Progress:.0%} {ProgressText} ".format(**vars(opstat)), end=""), 
+                # print("%s    " % dots, end=""),
+                # sys.stdout.flush()
+                if triesSinceChange > 0:
+                    log( "  Status: {Status} {Progress:.0%} {ProgressText} ".format(**vars(opstat)))
+                if opstat.Status == "Done":
+                    # print( "\nExport complete" )
+                    log( "Export complete" )
+                    break
+                if triesSinceChange == maxTries:
+                    # print("\nStopped waiting for queue to complete.")
+                    log("Stopped waiting for queue to complete.")
+                    break
+                time.sleep(0.5)
+
+            exportLog = qm.get_operation_log( exportInfo.ID )
+            for l in exportLog:
+                log( "   %s %s: %s" % (l.Time, l.Message, l.Detail) )
+
+            log( "Archiving operaton" )
+            qm.archive_operation ( exportInfo.ID )
+
+        blpath = self.conn.Scene.path_to_string(scene_path)
+        log ('---')
+        log ('--- Rendering thumbnails from Kitsu metadata: %s' % blpath)
+
+        if not conn:
+            return None
+
+        if not scene_path:
+            return None
+
+        try:
+            log('loading scene: %s' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path, { flapi.OPENFLAG_READ_ONLY } )
+        except flapi.FLAPIException as ex:
+            log( "Error loading scene: %s" % ex )
+            return None
+
+        md_names = {}
+        md_keys = set()
+        mddefns = scene.get_metadata_definitions()
+        for mdfn in mddefns:
+            md_keys.add(mdfn.Key)
+            md_names[mdfn.Name] = mdfn
+
+        if 'kitsu-uid' not in md_names.keys():
+            log('No kistu-uid metadata columnn exists in scene: "%s"' % scene.get_scene_pathname())
+            scene.close_scene()
+            scene.release()
+            return None
+
+        nshots = scene.get_num_shots()
+        if nshots == 0:
+            log( "No shots founf in the scene %s" % scene.get_scene_pathname() )
+            return None
+        log( "Found %d shot(s)" % nshots )
+
+        kitsu_shots_by_id = {x['id']: x for x in kitsu_shots}
+        bl_shot_ids = scene.get_shot_ids(0, nshots)
+        bl_shots_to_render = []
+        for bl_shot_id in bl_shot_ids:
+            if not self.processing_flag:
+                continue
+
+            shot = scene.get_shot(bl_shot_id.ShotId)
+            kitsu_uid = ''
+            try:
+                kitsu_uid = shot.get_metadata_strings(md_names['kitsu-uid'])[md_names['kitsu-uid'].Key]
+            except:
+                shot.release()
+                continue
+            
+            if kitsu_uid not in kitsu_shots_by_id:
+                log(f'Can not find kitsu uid {kitsu_uid} in Kitsu episode')
+                shot.release()
+                continue
+
+            bl_shots_to_render.append(shot)
+
+        try:
+            log( "Creating queue manager" )
+            qm = conn.QueueManager.create_local()
+        except flapi.FLAPIException as ex:
+            log( "Can not create queue manager: %s" % ex )
+            return None
+
+        uploaded_thumbnails = []
+        for shot_idx, shot in (enumerate(bl_shots_to_render)):
+            if not self.processing_flag:
+                continue
+
+            try:
+                kitsu_uid = shot.get_metadata_strings(md_names['kitsu-uid'])[md_names['kitsu-uid'].Key]
+            except:
+                shot.release()
+                continue
+
+            log (f'Rendering shot {shot_idx + 1} of {len(bl_shots_to_render)}')
+            remote_temp_folder = '/var/tmp/'
+            local_temp_folder = '/var/tmp'
+
+            try:
+                ex = conn.Export.create()
+                ex.select_shot(shot)
+                exSettings = flapi.StillExportSettings()
+                exSettings.ColourSpace = "sRGB"
+                exSettings.Format = "HD 1920x1080"
+                exSettings.Overwrite = flapi.EXPORT_OVERWRITE_REPLACE
+                exSettings.Directory = remote_temp_folder
+                exSettings.Frames = flapi.EXPORT_FRAMES_FIRST 
+                # exSettings.Filename = "%{Job}/%{Clip}_%{TimelineFrame}"
+                # exSettings.Filename = str(shot_id)
+                exSettings.Filename = kitsu_uid
+                exSettings.Source = flapi.EXPORT_SOURCE_SELECTEDSHOTS
+
+                # print ('')
+                # print ('Baselight sequence: %s' % blpath)
+                # print ('Generating thumbnail for: "%s" Shot name: "%s"' % (blpath, shot_name))
+                log( "Submitting to queue" )
+                exportInfo = ex.do_export_still( qm, scene, exSettings)
+                waitForExportToComplete(qm, exportInfo)
+                del ex
+            except Exception as ex:
+                log.error( "Can not export thumbnail: %s" % ex )
+
+            local_file_path = self.get_file(
+                os.path.join(remote_temp_folder, kitsu_uid + '.jpg'),
+                local_temp_folder
+            )
+
+            if os.path.isfile(local_file_path):
+                try:
+                    kitsu_connector.upload_thumbnail(
+                        kitsu_uid,
+                        local_file_path
+                    )
+                    uploaded_thumbnails.append(local_file_path)
+                except Exception as e:
+                    log (f'Unable to upload thumbnail: {pformat(e)}')
+
+                try:
+                    os.remove(local_file_path)
+                except Exception as e:
+                    log (f'Unable to cleanup thumbnail temp file: {local_file_path}')
+                    log (pformat(e))
+
+            shot.release()
+
+        log( "Closing QueueManager\n" )
+        qm.release()
+        scene.close_scene()
+        scene.release()
+        return uploaded_thumbnails
+
+    def get_file(self, remote_path, local_folder):
+        import paramiko
+        log = self.log
+        local_file_path =  os.path.join(
+            local_folder,
+            os.path.basename(remote_path)
+            )
+        
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Automatically add the server's SSH key (insecure)
+
+        ssh.connect(
+            self.flapi_host, 
+            username=self.flapi_user, 
+            password=self.flapi_pass)
+
+        sftp = ssh.open_sftp()
+        directory_contents = sftp.listdir(os.path.dirname(remote_path))
+
+        if os.path.basename(remote_path) not in directory_contents:
+            log (f'Unable to find file {self.flapi_user}@{self.flapi_host}:{remote_path}')
+            sftp.close()
+            ssh.close()
+            return ''
+        
+        try:
+            sftp.get(remote_path, local_file_path)
+        except Exception as e:
+            log (f'Unable to get file {self.flapi_user}@{self.flapi_host}:{remote_path}')
+            log (pformat(e))
+            sftp.close()
+            ssh.close()
+            return ''
+
+        try:
+            sftp.remove(remote_path)
+        except Exception as e:
+            log (f'Unable to remove file {self.flapi_user}@{self.flapi_host}:{remote_path}')
+            log (pformat(e))
+            sftp.close()
+            ssh.close()
+            return ''
+
+        sftp.close()
+        ssh.close()
+        return local_file_path

@@ -655,6 +655,7 @@ class blMenuKITSU(FramelessWindow):
             else:
                 self.UI_action_proceed_btn.setText('Stopping...')
                 self.processing = False
+                self.bl_connector.processing_flag = False
                 self.log('stopping...')
                 if self.action_thread is not None:
                     self.action_thread.join()
@@ -1155,7 +1156,15 @@ class blMenuKITSU(FramelessWindow):
 
         baselight_scene_info['baselight_shots'] = shots
 
-        kitsu_uid_metadata_obj = self.bl_connector.check_or_add_kitsu_metadata_definition(scene_path)    
+        kitsu_uid_metadata_obj = self.bl_connector.check_or_add_kitsu_metadata_definition(scene_path)
+        if isinstance(kitsu_uid_metadata_obj, str):
+            if kitsu_uid_metadata_obj.startswith('Error '):
+                self.framework.message_queue.put(
+                        {'type': 'mbox',
+                        'message': kitsu_uid_metadata_obj}
+                )
+                return False
+
         baselight_scene_info['kitsu_uid_metadata_obj'] = kitsu_uid_metadata_obj
 
         kitsu_sequence = self.kitsu_connector.get_kitsu_sequence(
@@ -1205,7 +1214,22 @@ class blMenuKITSU(FramelessWindow):
                 newly_created_shots.append(baselight_shot)
         
         if newly_created_shots:
-            self.bl_connector.set_kitsu_metadata(scene_path, newly_created_shots)            
+            response = self.bl_connector.set_kitsu_metadata(scene_path, newly_created_shots)
+            if isinstance(response, str):
+                if response.startswith('Error '):
+                    self.framework.message_queue.put(
+                            {'type': 'mbox',
+                            'message': response}
+                    )
+                    return False
+                
+        self.framework.message_queue.put(
+                {'type': 'mbox',
+                'message': f'Created {len(newly_created_shots)} shots in Kitsu'}
+        )
+        return True
+  
+
 
     def render_update_thumbnails(self, bl_path):
         if (not self.kitsu_current_project) or (not self.kitsu_current_episode):
@@ -1231,10 +1255,17 @@ class blMenuKITSU(FramelessWindow):
             self.kitsu_current_episode
         )
 
-        baselight_shots = self.bl_connector.get_baselight_scene_shots(scene_path)
-
-        for baselight_shot in baselight_shots:
-            print (baselight_shot.get('thumbnail_url'))
+        uploaded_thumbnails = self.bl_connector.get_and_upload_thumbnails_from_kitsu_id(
+            scene_path, 
+            kitsu_shots,
+            self.kitsu_connector)
+        
+        if uploaded_thumbnails:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Updated {len(uploaded_thumbnails)} thumbnails in Kitsu'}
+            )
+            return True
 
 
     def close_application(self):

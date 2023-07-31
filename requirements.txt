@@ -3,3 +3,4 @@ pyinstaller
 pyqt5
 gazu
 websocket-client
+paramiko
