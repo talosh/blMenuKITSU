@@ -1230,7 +1230,6 @@ class blMenuKITSU(FramelessWindow):
         return True
   
 
-
     def render_update_thumbnails(self, bl_path):
         if (not self.kitsu_current_project) or (not self.kitsu_current_episode):
             self.framework.message_queue.put(
