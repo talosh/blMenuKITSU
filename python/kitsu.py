@@ -130,10 +130,13 @@ class appKitsuConnector(object):
                 elif host.endswith('/api'):
                     host = host + ('/')
                 
+                self.gazu.set_host(host)
+                self.gazu.log_in(self.kitsu_user, self.kitsu_pass)
+
                 self.gazu_client = self.gazu.client.create_client(host)
                 if not self.gazu.client.host_is_up(client = self.gazu_client):
                     raise KitsuConnectionError(f'Host {host} is unreachable')
-                result = gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
+                result = self.gazu.log_in(self.kitsu_user, self.kitsu_pass, client = self.gazu_client)
                 self.user = self.gazu.client.get_current_user(client = self.gazu_client)
                 self.user_name = self.user.get('full_name')
                 self.log_debug('connected to kitsu as %s' % self.user_name)
@@ -1115,6 +1118,46 @@ class appKitsuConnector(object):
 
         return new_shot
     
+    def upload_thumbnail(self, kitsu_uid, file_path):
+        log = self.log
+        online_task_name = 'Online'
+
+        new_shot = self.gazu.entity.get_entity(kitsu_uid, client=self.gazu_client)
+
+        task_types = self.gazu.task.all_task_types(client=self.gazu_client)
+        shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
+        shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
+
+        task = {}
+        shot_tasks = self.gazu.task.all_tasks_for_shot(new_shot)
+        for shot_task in shot_tasks:
+            if shot_task.get('name') == online_task_name:
+                task = shot_task
+                break
+
+        if not task:
+            task = self.gazu.task.new_task(
+                new_shot, 
+                shot_task_types[0],
+                name = online_task_name,
+                client = self.gazu_client
+                )
+
+        todo = self.gazu.task.get_task_status_by_short_name("todo", client=self.gazu_client)
+        comment = self.gazu.task.add_comment(task, todo, "Add thumbnail", client=self.gazu_client)
+
+        log('Adding preview on task "%s"' % shot_task_types[0].get('name'))
+        preview_file = self.gazu.task.add_preview(
+            task,
+            comment,
+            file_path,
+            client=self.gazu_client
+        )
+
+        log('Uploading thumbnail for shot: "%s"' % new_shot.get('name'))
+        self.gazu.task.set_main_preview(preview_file, client=self.gazu_client)
+
+
         '''
 
         # try to open baselight scene and fill the shots back in with kitsu-related metadata
