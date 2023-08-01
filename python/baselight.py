@@ -247,6 +247,21 @@ class appBaselightConnector(object):
             self.log('unable to get scene path from: %s' % blpath)
             return None
 
+    def is_scene_writable(self, scene_path):
+        flapi = self.flapi
+        log = self.log
+        conn = self.conn
+
+        try:
+            log('Trying to open scene: %s in read-write mode' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
+            scene = conn.Scene.open_scene( scene_path, {  flapi.OPENFLAG_DISCARD  } )
+            scene.close_scene()
+            scene.release()
+            return True
+        except flapi.FLAPIException as ex:
+            log( "Error opening scene for writing: %s" % ex )
+            return False
+
     def get_baselight_scene_shots(self, scene_path):
         flapi = self.flapi
         conn = self.conn
@@ -445,12 +460,16 @@ class appBaselightConnector(object):
 
         return True
 
-    def get_and_upload_thumbnails_from_kitsu_id(self, scene_path, kitsu_shots, kitsu_connector):
+    def get_and_upload_thumbnails_from_kitsu_id(self, scene_path, kitsu_shots, kitsu_connector, missing_only = False):
         flapi = self.flapi
         conn = self.conn
         log = self.log
         log_debug = self.log_debug
         self.processing_flag = True
+
+        remote_temp_folder = '/vol/images/tmp/kitsu'
+        local_temp_folder = '/var/tmp'
+
 
         def waitForExportToComplete( qm, exportInfo ):
             for msg in exportInfo.Log:
@@ -562,7 +581,12 @@ class appBaselightConnector(object):
             log( "Can not create queue manager: %s" % ex )
             return None
 
-        uploaded_thumbnails = []
+        uploaded_uids = []
+        failed_uids = []
+
+        # try to render shots in one go first
+
+
         for shot_idx, shot in (enumerate(bl_shots_to_render)):
             if not self.processing_flag:
                 continue
@@ -574,8 +598,6 @@ class appBaselightConnector(object):
                 continue
 
             log (f'Rendering shot {shot_idx + 1} of {len(bl_shots_to_render)}')
-            remote_temp_folder = '/var/tmp/'
-            local_temp_folder = '/var/tmp'
 
             try:
                 ex = conn.Export.create()
@@ -612,15 +634,18 @@ class appBaselightConnector(object):
                         kitsu_uid,
                         local_file_path
                     )
-                    uploaded_thumbnails.append(local_file_path)
+                    uploaded_uids.append(kitsu_uid)
                 except Exception as e:
                     log (f'Unable to upload thumbnail: {pformat(e)}')
+                    failed_uids.append(kitsu_uid)
 
                 try:
                     os.remove(local_file_path)
                 except Exception as e:
                     log (f'Unable to cleanup thumbnail temp file: {local_file_path}')
                     log (pformat(e))
+            else:
+                failed_uids.append(kitsu_uid)
 
             shot.release()
 
@@ -628,7 +653,7 @@ class appBaselightConnector(object):
         qm.release()
         scene.close_scene()
         scene.release()
-        return uploaded_thumbnails
+        return uploaded_uids, failed_uids
 
     def get_file(self, remote_path, local_folder):
         import paramiko

@@ -792,6 +792,23 @@ class appKitsuConnector(object):
         shots = self.gazu.shot.all_shots_for_episode(episode, client=self.gazu_client)
         return shots
 
+    def shots_without_previews(self, kitsu_shots):
+        shots_without_preview = []
+        for kitsu_shot in kitsu_shots:
+            shot = self.gazu.shot.get_shot(
+                kitsu_shot.get('id'),
+                client = self.gazu_client)
+            if shot:
+                preview_files = self.gazu.shot.all_previews_for_shot(
+                    shot,
+                    client = self.gazu_client)
+                if preview_files:
+                    continue
+                shots_without_preview.append(shot)
+        
+        pprint (shots_without_preview)
+        return shots_without_preview
+
     def get_metadata_descriptors(self):
         # currently hardcoded
         return [

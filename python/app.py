@@ -52,7 +52,7 @@ class TerminalWidget(QtWidgets.QPlainTextEdit):
         super(TerminalWidget, self).__init__(parent)
         self.setReadOnly(True)  # Make the text edit read only
         self.setMaximumBlockCount(255)  # Set the maximum number of lines
-        self.setFixedHeight(80)
+        self.setFixedHeight(120)
         self.setStyleSheet("""
             QPlainTextEdit {
                 color: #888888;
@@ -149,8 +149,11 @@ class blMenuKITSU(FramelessWindow):
                 'name': 'Baselight Scene to Kitsu',
                 'method': self.baselight_scene_to_kitsu},
             {'code': 2,
-             'name': 'Render and Update Thumbnails',
-             'method': self.render_update_thumbnails}
+                'name': 'Update All Thumbnails',
+                'method': self.render_update_thumbnails},
+            {'code': 3,
+                'name': 'Update Missing Thumbnails',
+                'method': self.render_update_missing_thumbnails}
         ]
         self.current_action = {'code': 0, 'name': 'Select Action'}
         self.action_thread = None
@@ -666,7 +669,7 @@ class blMenuKITSU(FramelessWindow):
         window.setWindowTitle(self.framework.app_name)
         window.setStyleSheet('background-color: #313131')
         window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        window.setMinimumSize(520, 800)
+        window.setMinimumSize(520, 840)
         # screen_res = QtWidgets.QDesktopWidget().screenGeometry()
         # window.move((screen_res.width()/2)-150, (screen_res.height() / 2) - 180)
 
@@ -1144,6 +1147,13 @@ class blMenuKITSU(FramelessWindow):
             )
             return False
         
+        if not self.bl_connector.is_scene_writable(scene_path):
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to open Baselight scene for writing'}
+            )
+            return False
+        
         baselight_scene_info['scene_path'] = scene_path
 
         shots = self.bl_connector.get_baselight_scene_shots(scene_path)
@@ -1198,6 +1208,13 @@ class blMenuKITSU(FramelessWindow):
         if not new_shots:
             return False
         
+        if not self.bl_connector.is_scene_writable(scene_path):
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to open Baselight scene for writing'}
+            )
+            return False
+
         newly_created_shots = []
         for index, baselight_shot in enumerate(new_shots):
             shot_name = self.kitsu_connector.create_kitsu_shot_name(baselight_shot)
@@ -1213,6 +1230,13 @@ class blMenuKITSU(FramelessWindow):
                 baselight_shot['kitsu_shot'] = new_shot
                 newly_created_shots.append(baselight_shot)
         
+        if not self.bl_connector.is_scene_writable(scene_path):
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to open Baselight scene for writing. "kitsu-uid" metadata field will not be filled in Baselight scene. That would make thumbnails update impossible.'}
+            )
+            return False
+
         if newly_created_shots:
             response = self.bl_connector.set_kitsu_metadata(scene_path, newly_created_shots)
             if isinstance(response, str):
@@ -1229,7 +1253,6 @@ class blMenuKITSU(FramelessWindow):
         )
         return True
   
-
     def render_update_thumbnails(self, bl_path):
         if (not self.kitsu_current_project) or (not self.kitsu_current_episode):
             self.framework.message_queue.put(
@@ -1254,18 +1277,53 @@ class blMenuKITSU(FramelessWindow):
             self.kitsu_current_episode
         )
 
-        uploaded_thumbnails = self.bl_connector.get_and_upload_thumbnails_from_kitsu_id(
+        uploaded_uids, failed_uids = self.bl_connector.get_and_upload_thumbnails_from_kitsu_id(
             scene_path, 
             kitsu_shots,
             self.kitsu_connector)
         
-        if uploaded_thumbnails:
+        self.framework.message_queue.put(
+                {'type': 'mbox',
+                'message': f'Updated {len(uploaded_uids)} thumbnails.\nFailed to update {len(failed_uids)} thumbnails in Kitsu'}
+        )
+        return True
+
+    def render_update_missing_thumbnails(self, bl_path):
+        if (not self.kitsu_current_project) or (not self.kitsu_current_episode):
             self.framework.message_queue.put(
                     {'type': 'mbox',
-                    'message': f'Updated {len(uploaded_thumbnails)} thumbnails in Kitsu'}
+                    'message': f'Please select Kitsu project and episode'}
             )
-            return True
+            return False
+        
+        baselight_scene_info = {}
+        baselight_scene_info['blpath'] = bl_path
+        baselight_scene_info['project_id'] = self.kitsu_current_project.get('id')
 
+        scene_path = self.bl_connector.fl_get_scene_path(bl_path)
+        if not scene_path:
+            self.framework.message_queue.put(
+                    {'type': 'mbox',
+                    'message': f'Unable to find Baselight scene: {bl_path}'}
+            )
+            return False
+        
+        kitsu_shots = self.kitsu_connector.get_shots_for_episode(
+            self.kitsu_current_episode
+        )
+
+        kitsu_shots = self.kitsu_connector.shots_without_previews(kitsu_shots)
+
+        uploaded_uids, failed_uids = self.bl_connector.get_and_upload_thumbnails_from_kitsu_id(
+            scene_path, 
+            kitsu_shots,
+            self.kitsu_connector)
+        
+        self.framework.message_queue.put(
+                {'type': 'mbox',
+                'message': f'Updated {len(uploaded_uids)} thumbnails.\nFailed to update {len(failed_uids)} thumbnails in Kitsu'}
+        )
+        return True
 
     def close_application(self):
         self.framework.save_prefs()
