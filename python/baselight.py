@@ -420,7 +420,7 @@ class appBaselightConnector(object):
             log('Trying to open scene: %s in read-write mode' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
             scene = conn.Scene.open_scene( scene_path, {  flapi.OPENFLAG_DISCARD  })
         except flapi.FLAPIException as ex:
-            log.error( "Error opening scene for writing: %s" % ex )
+            log( "Error opening scene for writing: %s" % ex )
             return f'Error opening scene for writing: {pformat(ex)}'
         
         kitsu_uid_metadata_obj = None
@@ -521,17 +521,18 @@ class appBaselightConnector(object):
         log ('--- Rendering thumbnails from Kitsu metadata: %s' % blpath)
 
         if not conn:
-            return None
+            return [], kitsu_shots
+
 
         if not scene_path:
-            return None
+            return [], kitsu_shots
 
         try:
             log('loading scene: %s' % scene_path.Host + ':' + scene_path.Job + ':' + scene_path.Scene)
             scene = conn.Scene.open_scene( scene_path, { flapi.OPENFLAG_READ_ONLY } )
         except flapi.FLAPIException as ex:
             log( "Error loading scene: %s" % ex )
-            return None
+            return [], kitsu_shots
 
         md_names = {}
         md_keys = set()
@@ -544,12 +545,12 @@ class appBaselightConnector(object):
             log('No kistu-uid metadata columnn exists in scene: "%s"' % scene.get_scene_pathname())
             scene.close_scene()
             scene.release()
-            return None
+            return [], kitsu_shots
 
         nshots = scene.get_num_shots()
         if nshots == 0:
             log( "No shots founf in the scene %s" % scene.get_scene_pathname() )
-            return None
+            return [], kitsu_shots
         log( "Found %d shot(s)" % nshots )
 
         kitsu_shots_by_id = {x['id']: x for x in kitsu_shots}
@@ -579,13 +580,79 @@ class appBaselightConnector(object):
             qm = conn.QueueManager.create_local()
         except flapi.FLAPIException as ex:
             log( "Can not create queue manager: %s" % ex )
-            return None
+            return [], kitsu_shots
 
         uploaded_uids = []
         failed_uids = []
 
+        bl_batch_export_done = False
         # try to render shots in one go first
+        try:
+            ex = conn.Export.create()
+            ex.select_shots(bl_shots_to_render)
+            exSettings = flapi.StillExportSettings()
+            exSettings.ColourSpace = "sRGB"
+            exSettings.Format = "HD 1920x1080"
+            exSettings.Overwrite = flapi.EXPORT_OVERWRITE_REPLACE
+            exSettings.Directory = remote_temp_folder
+            exSettings.Frames = flapi.EXPORT_FRAMES_FIRST 
+            # exSettings.Filename = "%{Job}/%{Clip}_%{TimelineFrame}"
+            # exSettings.Filename = str(shot_id)
+            exSettings.Filename = "%{kitsu-uid}"
+            exSettings.Source = flapi.EXPORT_SOURCE_SELECTEDSHOTS
 
+            # print ('')
+            # print ('Baselight sequence: %s' % blpath)
+            # print ('Generating thumbnail for: "%s" Shot name: "%s"' % (blpath, shot_name))
+            log( "Submitting to queue" )
+            exportInfo = ex.do_export_still( qm, scene, exSettings)
+            waitForExportToComplete(qm, exportInfo)
+            del ex
+            bl_batch_export_done = True
+        except Exception as ex:
+            log( "Can not export thumbnails: %s" % ex )
+        
+        if bl_batch_export_done:
+            for shot_idx, shot in (enumerate(bl_shots_to_render)):
+                try:
+                    kitsu_uid = shot.get_metadata_strings(md_names['kitsu-uid'])[md_names['kitsu-uid'].Key]
+                except:
+                    shot.release()
+                    continue
+
+                local_file_path = self.get_file(
+                    os.path.join(remote_temp_folder, kitsu_uid + '.jpg'),
+                    local_temp_folder
+                )
+
+                if os.path.isfile(local_file_path):
+                    try:
+                        kitsu_connector.upload_thumbnail(
+                            kitsu_uid,
+                            local_file_path
+                        )
+                        uploaded_uids.append(kitsu_uid)
+                    except Exception as e:
+                        log (f'Unable to upload thumbnail: {pformat(e)}')
+                        failed_uids.append(kitsu_uid)
+
+                    try:
+                        os.remove(local_file_path)
+                    except Exception as e:
+                        log (f'Unable to cleanup thumbnail temp file: {local_file_path}')
+                        log (pformat(e))
+                else:
+                    failed_uids.append(kitsu_uid)
+
+                shot.release()
+
+            log( "Closing QueueManager\n" )
+            qm.release()
+            scene.close_scene()
+            scene.release()
+            return uploaded_uids, failed_uids
+        
+        log ('Rendering shots one by one')
 
         for shot_idx, shot in (enumerate(bl_shots_to_render)):
             if not self.processing_flag:
@@ -621,7 +688,7 @@ class appBaselightConnector(object):
                 waitForExportToComplete(qm, exportInfo)
                 del ex
             except Exception as ex:
-                log.error( "Can not export thumbnail: %s" % ex )
+                log( "Can not export thumbnail: %s" % ex )
 
             local_file_path = self.get_file(
                 os.path.join(remote_temp_folder, kitsu_uid + '.jpg'),
