@@ -806,7 +806,6 @@ class appKitsuConnector(object):
                     continue
                 shots_without_preview.append(shot)
         
-        pprint (shots_without_preview)
         return shots_without_preview
 
     def get_metadata_descriptors(self):
