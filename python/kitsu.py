@@ -1118,7 +1118,8 @@ class appKitsuConnector(object):
                 log ('creating %s in %s' % (metadata_descriptor_name, project.get('name')))
                 self.gazu.project.add_metadata_descriptor(
                     project,
-                    data = data,
+                    metadata_descriptor_name,
+                    'Shot',
                     client = self.gazu_client
                 )
 
