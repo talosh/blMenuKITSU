@@ -1092,7 +1092,8 @@ class appKitsuConnector(object):
     def create_metadata_fields(self, project):
         log = self.log
         log_debug = self.log_debug
-
+        self.gazu.project.all_metadata_descriptors(project, client=self.gazu_client)
+        '''
         descriptors_api_path = '/data/projects/' + project.get('id') + '/metadata-descriptors'
         project_descriptor_data = self.gazu.client.get(descriptors_api_path, client = self.gazu_client)
         project_descriptor_names = [x['name'] for x in project_descriptor_data]
@@ -1117,6 +1118,7 @@ class appKitsuConnector(object):
 
                 log ('creating %s in %s' % (metadata_descriptor_name, project.get('name')))
                 self.gazu.client.post(descriptors_api_path, data, client = self.gazu_client)
+        '''
 
     def create_new_shot(self, project_dict, kitsu_sequence, shot_name, shot_data):
         new_shot = None

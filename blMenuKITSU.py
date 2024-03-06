@@ -41,7 +41,7 @@ def main():
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     fw = AppFramework(
-        app_name = APP_NAME,
+        app_name = f'{APP_NAME} {__version__}',
         version = __version__,
         debug = DEBUG
     )
