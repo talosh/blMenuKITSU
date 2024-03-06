@@ -1197,7 +1197,10 @@ class blMenuKITSU(FramelessWindow):
             )
             return False
 
-        self.kitsu_connector.create_metadata_fields(self.kitsu_current_project)
+        try:
+            self.kitsu_connector.create_metadata_fields(self.kitsu_current_project)
+        except Exception as e:
+            self.log(f'Error creating metadata descriptors in Kitsu: {e}')
 
         baselight_scene_info['kitsu_sequence'] = kitsu_sequence
         kitsu_shots = self.kitsu_connector.get_shots_for_sequence(kitsu_sequence)
