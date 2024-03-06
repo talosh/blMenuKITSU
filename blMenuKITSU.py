@@ -21,7 +21,7 @@ from python.baselight import baselight_process
 APP_NAME = 'blMenuKITSU'
 DEBUG=False
 
-__version__ = 'v0.0.1.dev.002'
+__version__ = 'v0.0.1.dev.003'
 
 def main():
     fw = AppFramework(
