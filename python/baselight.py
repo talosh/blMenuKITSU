@@ -480,7 +480,7 @@ class appBaselightConnector(object):
             log( "Waiting on render job to complete" )
             triesSinceChange = 0
             lastProgress = -1
-            maxTries = 20
+            maxTries = 999
             while True:
                 opstat = qm.get_operation_status( exportInfo.ID )
                 triesSinceChange +=1 
