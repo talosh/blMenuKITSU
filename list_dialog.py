@@ -71,6 +71,18 @@ def get_all_shot_input_colourspaces():
 def onListDialogMenuItemSelected(sender, signal, args):
 
     dialog = MyDialog(conn)
+    result = dialog.show()
+    if result:
+        # Show results
+        #
+        # Need to fetch an instance of the Application class to
+        # use the message_dialog method
+        #
+        app.message_dialog( 
+            "Dialog Done",
+            "Name was '%s' and Description was '%s'." % (result['Name'], result['Desc']),
+            ["OK"]
+        )
 
     '''
 
