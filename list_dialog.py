@@ -10,15 +10,16 @@ class MyDialog:
 
         # Define items to show in dialog
         self.items = [
-            flapi.DialogItem(Key="Server", Label="Name", Type=flapi.DIT_STRING, Default = ""),
-            flapi.DialogItem(Key="User", Label="Description", Type=flapi.DIT_STRING, Default = ""),
-            flapi.DialogItem(Key="Password", Label="Name", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="User", Label="User", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Password", Label="Password", Type=flapi.DIT_STRING, Default = ""),
         ]
 
         # Create an empty dictionary for the default settings for the dialog
         self.settings = {
-            "Name": "",
-            "Desc": "",
+            "Server": "",
+            "User": "",
+            "Password": "",
         }
 
         # Create dialog, which will be shown later
@@ -81,7 +82,7 @@ def onListDialogMenuItemSelected(sender, signal, args):
         #
         app.message_dialog( 
             "Dialog Done",
-            "Name was '%s' and Description was '%s'." % (result['Name'], result['Desc']),
+            "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
             ["OK"]
         )
 
