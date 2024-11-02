@@ -118,7 +118,7 @@ conn.connect()
 app = conn.Application.get()
  
 # Place menu item on Scene menu
-list_dialog_menu_item = conn.MenuItem.create("Show List Dialog")
+list_dialog_menu_item = conn.MenuItem.create("Show Dialog")
 list_dialog_menu_item.register(flapi.MENULOCATION_SCENE_MENU)
 
 # Connect up both the 'MenuItemSelected' and 'MenuItemUpdate' signals
