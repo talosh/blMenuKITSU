@@ -10,8 +10,9 @@ class MyDialog:
 
         # Define items to show in dialog
         self.items = [
-            flapi.DialogItem(Key="Name", Label="Name", Type=flapi.DIT_STRING, Default = ""),
-            flapi.DialogItem(Key="Desc", Label="Description", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Server", Label="Name", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="User", Label="Description", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Password", Label="Name", Type=flapi.DIT_STRING, Default = ""),
         ]
 
         # Create an empty dictionary for the default settings for the dialog
@@ -22,7 +23,7 @@ class MyDialog:
 
         # Create dialog, which will be shown later
         self.dialog = self.conn.DynamicDialog.create( 
-            "My Dialog",
+            "KITSU Login",
             self.items,
             self.settings
         )
