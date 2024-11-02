@@ -4,6 +4,42 @@ import flapi
 
 scene = None
 
+class MyDialog:
+    def __init__(self, conn):
+        self.conn = conn
+
+        # Define items to show in dialog
+        self.items = [
+            flapi.DialogItem(Key="Name", Label="Name", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Desc", Label="Description", Type=flapi.DIT_STRING, Default = ""),
+        ]
+
+        # Create an empty dictionary for the default settings for the dialog
+        self.settings = {
+            "Name": "",
+            "Desc": "",
+        }
+
+        # Create dialog, which will be shown later
+        self.dialog = self.conn.DynamicDialog.create( 
+            "My Dialog",
+            self.items,
+            self.settings
+        )
+
+    def show(self):
+        # Show the dialog modally
+        #
+        # If the user clicks OK, the settings from the dialog will be returned
+        # as a dictionary
+        #
+        # If the user clicks Cancel, None will be returned.
+        # 
+        # If you pass a negative width/height, it will add this width/height to the
+        # default with of the contents of the dialog.
+        #
+        return self.dialog.show_modal(-200, -50)
+
 # Define a function to return input colour spaces for all shots
 def get_all_shot_input_colourspaces():
     shot_input_colourspaces = []
@@ -33,6 +69,11 @@ def get_all_shot_input_colourspaces():
 
 # Define handler function for "MenuItemSelected" signal of 'list_dialog_menu_item'
 def onListDialogMenuItemSelected(sender, signal, args):
+
+    dialog = MyDialog(conn)
+
+    '''
+
     # Get all shot input colour spaces
     shot_input_colour_spaces = get_all_shot_input_colourspaces()
     # Create the list dialog, providing title, button text and items
@@ -47,6 +88,7 @@ def onListDialogMenuItemSelected(sender, signal, args):
                 "User chose '%s'." % choice['Text'],
                 ["OK"]
             )
+    '''
 
 # Define handler function for "MenuItemUpdate" signal of 'list_dialog_menu_item'
 # (This signal fires just before menu item is displayed)
