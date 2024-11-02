@@ -24,29 +24,7 @@ DEBUG=True
 __version__ = 'v0.0.1.dev.001'
 
 def main():
-    fw = AppFramework(
-        app_name = APP_NAME,
-        version = __version__,
-        debug = DEBUG
-    )
-
-    app = blMenuKITSU([], framework = fw)
-    
-    window = app.main_window()
-    window.show()
-
-    app.exec_()
-    return app
+    pass
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    fw = AppFramework(
-        app_name = APP_NAME,
-        version = __version__,
-        debug = DEBUG
-    )
-    ex = blMenuKITSU([], framework = fw)
-    sys.exit(app.exec_())
-
-    
-    # main()
+    pass
