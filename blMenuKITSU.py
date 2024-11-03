@@ -1,12 +1,14 @@
 import os
 import sys
-from PyQt5 import QtWidgets, QtCore
 
 from pprint import pprint, pformat
 
-from python.app import blMenuKITSU
-from python.framework import AppFramework
-
+settings = {
+    'menu_group_name': 'Kitsu',
+    'debug': False,
+    'app_name': 'blMenuKITSU',
+    'version': 'v0.0.2.dev.001',
+}
 
 '''
 from python.config import get_config_data
@@ -17,11 +19,6 @@ from python.sequence import sequence_sync
 from python.util import RobotLog
 from python.baselight import baselight_process
 '''
-
-APP_NAME = 'blMenuKITSU'
-DEBUG=True
-
-__version__ = 'v0.0.2.dev.001'
 
 def main():
     pass
