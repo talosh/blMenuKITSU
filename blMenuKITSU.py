@@ -12,6 +12,8 @@ settings = {
     'version': 'v0.0.2.dev.001',
 }
 
+print ('hello')
+
 packages_folder = os.path.join(
     os.path.dirname(os.path.realpath('__file__')),
     f'{settings["app_name"]}.packages'
