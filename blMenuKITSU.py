@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 
 import flapi
 
@@ -13,7 +14,7 @@ settings = {
 }
 
 print ('hello')
-print (os.getcwd())
+print (inspect.getfile(lambda: None))
 
 
 packages_folder = os.path.join(
