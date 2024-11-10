@@ -119,6 +119,22 @@ class Prefs(dict):
         result = exp.sub('_', stripped_name)
         return re.sub('_\_+', '_', result)
 
+class FLAPIManager():
+# A class to manage FLAPI calls
+
+    def __init__(self):
+
+        try:
+            self.conn = flapi.Connection.get() 
+        except flapi.FLAPIException as ex:
+            print( "Could not connect to FLAPI: %s" % ex, flush=True)
+            
+        try:
+            self.app = self.conn.Application.get()
+        except flapi.FLAPIException as ex:
+            print( "Could not get Application instance: %s" % ex , flush=True)
+
+
 class KitsuLoginDialog:
     def __init__(self, conn):
         self.conn = conn
