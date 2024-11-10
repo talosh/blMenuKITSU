@@ -120,7 +120,6 @@ class Prefs(dict):
 
 class FLAPIManager():
 # A class to manage FLAPI calls
-
     def __init__(self):
 
         try:
