@@ -176,7 +176,7 @@ class KitsuCommandsMenu:
 
 
 class LoginMenuitem():
-    def __init__(self, conn):
+    def __init__(self):
         self.menuItem = flapiManager.conn.MenuItem.create("Login to Kitsu", "uk.ltd.filmlight.kitsu.login")
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
