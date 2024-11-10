@@ -178,10 +178,10 @@ class LoginMenuitem():
         self.menuItem = flapiManager.conn.MenuItem.create("Login to Kitsu", "uk.ltd.filmlight.kitsu.login")
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
+        self.menuItem.connect("MenuItemUpdate", self.handle_update_signal)
+
 
     def handle_select_signal( self, sender, signal, args ):
-
-        print ('hello from handle_select_signal')
 
         self.items = [
             flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = ""),
@@ -201,7 +201,29 @@ class LoginMenuitem():
             self.settings
         )
 
-        return self.dialog.show_modal(-200, -50)
+        result =  self.dialog.show_modal(-200, -50)
+
+        if result:
+            # Show results
+            #
+            # Need to fetch an instance of the Application class to
+            # use the message_dialog method
+            #
+            FLAPIManager.app.message_dialog( 
+                "Dialog Done",
+                "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
+                ["OK"]
+            )
+
+
+    def handle_update_signal(self, sender, signal, args):
+        pass
+        '''
+        global scene
+        # Enable menu item only if a scene is open
+        scene = app.get_current_scene()
+        list_dialog_menu_item.set_enabled(scene != None)
+        '''
 
 
 scene = None
