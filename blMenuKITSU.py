@@ -195,7 +195,7 @@ class LoginMenuitem():
             "Password": "",
         }
 
-        self.dialog = self.conn.DynamicDialog.create( 
+        self.dialog = flapiManager.conn.DynamicDialog.create( 
             "KITSU Login",
             self.items,
             self.settings
