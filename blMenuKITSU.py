@@ -119,6 +119,7 @@ class Prefs(dict):
         result = exp.sub('_', stripped_name)
         return re.sub('_\_+', '_', result)
 
+
 class FLAPIManager():
 # A class to manage FLAPI calls
 
@@ -133,6 +134,7 @@ class FLAPIManager():
             self.app = self.conn.Application.get()
         except flapi.FLAPIException as ex:
             print( "Could not get Application instance: %s" % ex , flush=True)
+
 
 class KitsuManager():
     # A class to manage Frame.io REST client calls
@@ -161,6 +163,17 @@ class KitsuManager():
         self.data_hierarchy_idx = 0
 
         self.possibly_missing_assets = []
+        
+
+class KitsuCommandsMenu:
+    menu = None
+
+    def __init__(self):
+        self.menu = flapiManager.conn.Menu.create()
+        self.menuItem = flapiManager.conn.MenuItem.create("Kitsu", "uk.ltd.filmlight.kitsu.actions")
+        self.menuItem.register(flapi.MENULOCATION_SCENE_MENU)
+        self.menuItem.set_sub_menu(self.menu)
+
 
 class LoginMenuitem():
     def __init__(self, conn):
@@ -189,16 +202,7 @@ class LoginMenuitem():
         )
 
         return self.dialog.show_modal(-200, -50)
-        
 
-class KitsuCommandsMenu:
-    menu = None
-
-    def __init__(self):
-        self.menu = flapiManager.conn.Menu.create()
-        self.menuItem = flapiManager.conn.MenuItem.create("Kitsu", "uk.ltd.filmlight.kitsu.actions")
-        self.menuItem.register(flapi.MENULOCATION_SCENE_MENU)
-        self.menuItem.set_sub_menu(self.menu)
 
 scene = None
 
