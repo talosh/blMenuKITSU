@@ -14,7 +14,7 @@ settings = {
 
 packages_folder = os.path.join(
     os.path.dirname(os.path.realpath('__file__')),
-    f'{settings["app+name"]}.packages'
+    f'{settings["app_name"]}.packages'
 )
 
 print (packages_folder)
