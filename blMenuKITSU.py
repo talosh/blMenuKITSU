@@ -13,6 +13,8 @@ settings = {
 }
 
 print ('hello')
+print (os.getcwd())
+
 
 packages_folder = os.path.join(
     os.path.dirname(os.path.realpath('__file__')),
