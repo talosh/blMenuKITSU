@@ -139,21 +139,40 @@ class KitsuLoginDialog:
     def show(self):
         return self.dialog.show_modal(-200, -50)
 
+scene = None
 
-'''
-from python.config import get_config_data
-from python.config import config_reader
-from python.tailon import tailon
-from python.metadata_fields import set_metadata_fields
-from python.sequence import sequence_sync
-from python.util import RobotLog
-from python.baselight import baselight_process
-'''
+def onListDialogMenuItemSelected(sender, signal, args):
+    dialog = KitsuLoginDialog(conn)
+    result = dialog.show()
+    if result:
+        # Show results
+        #
+        # Need to fetch an instance of the Application class to
+        # use the message_dialog method
+        #
+        app.message_dialog( 
+            "Dialog Done",
+            "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
+            ["OK"]
+        )
 
-'''
-def main():
-    pass
+def onListDialogMenuItemUpdate(sender, signal, args):
+    global scene
+    # Enable menu item only if a scene is open
+    scene = app.get_current_scene()
+    list_dialog_menu_item.set_enabled(scene != None)
 
-if __name__ == "__main__":
-    pass
-'''
+# Connect to FLAPI
+conn = flapi.Connection.get() 
+conn.connect()
+
+# Get application
+app = conn.Application.get()
+ 
+# Place menu item on Scene menu
+list_dialog_menu_item = conn.MenuItem.create("Show Dialog")
+list_dialog_menu_item.register(flapi.MENULOCATION_SCENE_MENU)
+
+# Connect up both the 'MenuItemSelected' and 'MenuItemUpdate' signals
+list_dialog_menu_item.connect("MenuItemSelected", onListDialogMenuItemSelected)
+list_dialog_menu_item.connect("MenuItemUpdate", onListDialogMenuItemUpdate)
