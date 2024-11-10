@@ -13,8 +13,6 @@ settings = {
     'version': 'v0.0.2.dev.001',
 }
 
-print ('hello')
-
 packages_folder = os.path.join(
     os.path.dirname(inspect.getfile(lambda: None)),
     f'{settings["app_name"]}.packages'
@@ -182,6 +180,8 @@ class LoginMenuitem():
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
 
     def handle_select_signal( self, sender, signal, args ):
+
+        print ('hello from handle_select_signal')
 
         self.items = [
             flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = ""),
