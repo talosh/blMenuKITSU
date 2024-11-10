@@ -127,8 +127,6 @@ class FLAPIManager():
         except flapi.FLAPIException as ex:
             print( "Could not connect to FLAPI: %s" % ex, flush=True)
 
-        self.app = self.conn.Application.get()
-
         try:
             self.app = self.conn.Application.get()
         except flapi.FLAPIException as ex:
@@ -210,7 +208,7 @@ class LoginMenuitem():
             # Need to fetch an instance of the Application class to
             # use the message_dialog method
             #
-            FLAPIManager.app.message_dialog( 
+            flapiManager.app.message_dialog( 
                 "Dialog Done",
                 "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
                 ["OK"]
