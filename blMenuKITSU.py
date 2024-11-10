@@ -144,6 +144,15 @@ class KitsuLoginDialog:
     def show(self):
         return self.dialog.show_modal(-200, -50)
 
+class KitsuCommandsMenu:
+    menu = None
+
+    def __init__(self):
+        self.menu = conn.Menu.create()
+        self.menuItem = conn.MenuItem.create("Kitsu", "uk.ltd.filmlight.kitsu.actions")
+        self.menuItem.register(flapi.MENULOCATION_SCENE_MENU)
+        self.menuItem.set_sub_menu(self.menu)
+
 scene = None
 
 def onListDialogMenuItemSelected(sender, signal, args):
@@ -173,7 +182,9 @@ conn.connect()
 
 # Get application
 app = conn.Application.get()
- 
+
+kitsuCommandsMenu = KitsuCommandsMenu()
+
 # Place menu item on Scene menu
 list_dialog_menu_item = conn.MenuItem.create("Show Dialog")
 list_dialog_menu_item.register(flapi.MENULOCATION_SCENE_MENU)
