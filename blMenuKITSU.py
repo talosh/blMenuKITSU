@@ -127,6 +127,8 @@ class FLAPIManager():
         except flapi.FLAPIException as ex:
             print( "Could not connect to FLAPI: %s" % ex, flush=True)
 
+        self.app = self.conn.Application.get()
+
         try:
             self.app = self.conn.Application.get()
         except flapi.FLAPIException as ex:
