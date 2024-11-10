@@ -162,9 +162,13 @@ class KitsuManager():
 
         self.possibly_missing_assets = []
 
-class KitsuLoginDialog:
+class LoginMenuitem():
     def __init__(self, conn):
-        self.conn = conn
+        self.menuItem = flapiManager.conn.MenuItem.create("Login to Kitsu", "uk.ltd.filmlight.kitsu.login")
+        kitsuCommandsMenu.menu.add_item(self.menuItem)
+        self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
+
+    def handle_select_signal( self, sender, signal, args ):
 
         self.items = [
             flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = ""),
@@ -184,8 +188,8 @@ class KitsuLoginDialog:
             self.settings
         )
 
-    def show(self):
         return self.dialog.show_modal(-200, -50)
+        
 
 class KitsuCommandsMenu:
     menu = None
@@ -223,7 +227,7 @@ flapiManager = FLAPIManager()
 kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
-# loginMenuItem = LoginMenuitem()
+loginMenuItem = LoginMenuitem()
 
 '''
 # Connect to FLAPI
