@@ -14,11 +14,9 @@ settings = {
 }
 
 print ('hello')
-print (inspect.getfile(lambda: None))
-
 
 packages_folder = os.path.join(
-    os.path.dirname(os.path.realpath('__file__')),
+    os.path.dirname(inspect.getfile(lambda: None)),
     f'{settings["app_name"]}.packages'
 )
 
