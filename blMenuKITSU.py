@@ -13,9 +13,11 @@ settings = {
 }
 
 packages_folder = os.path.join(
-    os.path.dirname(__file__),
+    os.path.dirname(os.path.realpath('__file__')),
     f'{settings["app+name"]}.packages'
 )
+
+print (packages_folder)
 
 if packages_folder not in sys.path:
     sys.path.append(packages_folder)
