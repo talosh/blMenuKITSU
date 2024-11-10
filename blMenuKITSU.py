@@ -128,12 +128,39 @@ class FLAPIManager():
             self.conn = flapi.Connection.get() 
         except flapi.FLAPIException as ex:
             print( "Could not connect to FLAPI: %s" % ex, flush=True)
-            
+
         try:
             self.app = self.conn.Application.get()
         except flapi.FLAPIException as ex:
             print( "Could not get Application instance: %s" % ex , flush=True)
 
+class KitsuManager():
+    # A class to manage Frame.io REST client calls
+
+    def __init__(self):
+
+        self.LOGGED_OUT_STATE = 0
+        self.LOGGING_IN_STATE = 1
+        self.LOGGED_IN_STATE = 2
+
+        self.state = self.LOGGED_OUT_STATE
+
+        self.login_request_in_progress = False
+
+        self.kitsu_client = None
+        self.kitsu_account_id = None
+        self.kitsu_account_name = None
+        self.kitsu_token = None
+        self.authenticated = False
+        self.data_hierarchy = {}
+        self.data_hierarchy_idx = None
+        self.uuid = None
+        self.dev_token = None
+        self.data_layers = ['accounts', 'teams', 'projects', 'flat_pathed_folders', 'assets', 'comments']
+        self.data_hierarchy = {k:[] for k in self.data_layers}
+        self.data_hierarchy_idx = 0
+
+        self.possibly_missing_assets = []
 
 class KitsuLoginDialog:
     def __init__(self, conn):
@@ -191,6 +218,9 @@ def onListDialogMenuItemUpdate(sender, signal, args):
     # Enable menu item only if a scene is open
     scene = app.get_current_scene()
     list_dialog_menu_item.set_enabled(scene != None)
+
+flapiManager = FLAPIManager()
+kitsuManager = KitsuManager()
 
 # Connect to FLAPI
 conn = flapi.Connection.get() 
