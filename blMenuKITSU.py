@@ -18,7 +18,7 @@ packages_folder = os.path.join(
     f'{settings["app_name"]}.packages'
 )
 
-print (packages_folder)
+import requests
 
 if packages_folder not in sys.path:
     sys.path.append(packages_folder)
