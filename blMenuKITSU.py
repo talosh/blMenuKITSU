@@ -165,7 +165,7 @@ class KitsuManager():
         self.possibly_missing_assets = []
         
     def login(self, server, user, password):
-        return {'status': None, 'message': 'Huipizda'}
+        return {'status': None, 'message': 'Testing loop only'}
 
 
 class KitsuCommandsMenu:
@@ -213,13 +213,13 @@ class LoginMenuitem():
             # Need to fetch an instance of the Application class to
             # use the message_dialog method
             #
-            # '''
+            '''
             flapiManager.app.message_dialog( 
                 "Dialog Done",
                 "Server: %s, User: %s, Pass %s." % (result['Server'], result['User'], result['Password']),
                 ["OK"]
             )
-            # '''
+            '''
 
             login_result = kitsuManager.login(
                 result['Server'],
