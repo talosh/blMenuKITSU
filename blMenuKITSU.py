@@ -269,6 +269,7 @@ kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
 loginMenuItem = LoginMenuitem()
+aboutMenuItem = AboutMenuItem()
 
 '''
 # Connect to FLAPI
