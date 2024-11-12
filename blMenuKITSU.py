@@ -23,13 +23,11 @@ if packages_folder not in sys.path:
     sys.path.append(packages_folder)
 try:
     import gazu
-    import socketio
 except Exception as e:
     print (f'[{settings.get("app_name")}]: Unable to import Gazu: {e}')
 if packages_folder in sys.path:
     sys.path.remove(packages_folder)
 
-# pprint (dir(gazu))
 
 class Prefs(dict):
     # subclass of a dict()
@@ -179,11 +177,10 @@ class KitsuCommandsMenu:
 
 class LoginMenuitem():
     def __init__(self):
-        self.menuItem = flapiManager.conn.MenuItem.create("Login to Kitsu", "uk.ltd.filmlight.kitsu.login")
+        self.menuItem = flapiManager.conn.MenuItem.create('Login to Kitsu', 'uk.ltd.filmlight.kitsu.login')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
-        self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
-        self.menuItem.connect("MenuItemUpdate", self.handle_update_signal)
-
+        self.menuItem.connect( 'MenuItemSelected', self.handle_select_signal )
+        self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
 
@@ -218,6 +215,13 @@ class LoginMenuitem():
                 "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
                 ["OK"]
             )
+
+        if KitsuManager.state == KitsuManager.LOGGED_OUT_STATE:
+            self.menuItem.set_title('Login to Kitsu')
+        elif KitsuManager.state == KitsuManager.LOGGING_IN_STATE:
+            self.menuItem.set_title('Logging in ...')
+        else:
+            self.menuItem.set_title(f'Logout {KitsuManager.get_username()}')
 
 
     def handle_update_signal(self, sender, signal, args):
