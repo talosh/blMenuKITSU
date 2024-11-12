@@ -225,6 +225,20 @@ class LoginMenuitem():
         '''
 
 
+class AboutMenuItem():
+    def __init__(self):
+        self.menuItem = flapiManager.conn.MenuItem.create(f'Version {settings.get("version")}', 'uk.ltd.filmlight.kitsu.about')
+        kitsuCommandsMenu.menu.add_item(self.menuItem)
+        self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
+
+        flapiManager.app.message_dialog( 
+            f'Baselught to Kitsu connector',
+            f'Version: {settings.get("version")}, Gazu: {gazu.__version__}',
+            ["OK"]
+        )
+
+
+
 scene = None
 
 def onListDialogMenuItemSelected(sender, signal, args):
