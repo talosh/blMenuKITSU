@@ -255,7 +255,7 @@ class AboutMenuItem():
         major = sys.version_info.major
         minor = sys.version_info.minor
         micro = sys.version_info.micro
-        python_str = f'Python version {major}.{minor}.{micro}'
+        python_str = f"Baselight's Python version {major}.{minor}.{micro}"
 
         flapiManager.app.message_dialog( 
             f'Baselught to Kitsu connector',
