@@ -23,6 +23,7 @@ if packages_folder not in sys.path:
     sys.path.append(packages_folder)
 try:
     import gazu
+    import socketio
 except Exception as e:
     print (f'[{settings.get("app_name")}]: Unable to import Gazu: {e}')
 if packages_folder in sys.path:
