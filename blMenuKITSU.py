@@ -19,14 +19,12 @@ packages_folder = os.path.join(
     f'{settings["app_name"]}.packages'
 )
 
-print (sys.version)
-print (platform.architecture()[0])
-
-import requests
-
 if packages_folder not in sys.path:
     sys.path.append(packages_folder)
-import gazu
+try:
+    import gazu
+except Exception as e:
+    print (f'{settings.get("app_name")}: Unable to import Gazu: {e}')
 if packages_folder in sys.path:
     sys.path.remove(packages_folder)
 
@@ -239,12 +237,26 @@ class AboutMenuItem():
 
 
     def handle_select_signal( self, sender, signal, args ):
+        
+        try:
+            packages_folder = os.path.join(
+                os.path.dirname(inspect.getfile(lambda: None)),
+                f'{settings["app_name"]}.packages'
+            )
+            if packages_folder not in sys.path:
+                sys.path.append(packages_folder)
+            import gazu
+            if packages_folder in sys.path:
+                sys.path.remove(packages_folder)
+            gazu_str = f'Gazu: {gazu.__version__}'
+        except Exception as e:
+            gazu_str = f'Unable to import Gazu: {e}'
+
         flapiManager.app.message_dialog( 
             f'Baselught to Kitsu connector',
-            f'Version: {settings.get("version")}, Gazu: {gazu.__version__}',
+            f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}',
             ["OK"]
         )
-
 
 
 scene = None
