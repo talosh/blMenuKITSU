@@ -1,6 +1,7 @@
 import os
 import sys
 import inspect
+import platform
 
 import flapi
 
@@ -17,6 +18,9 @@ packages_folder = os.path.join(
     os.path.dirname(inspect.getfile(lambda: None)),
     f'{settings["app_name"]}.packages'
 )
+
+print (sys.version)
+print (platform.architecture()[0])
 
 import requests
 
