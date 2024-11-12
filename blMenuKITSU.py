@@ -222,7 +222,7 @@ class LoginMenuitem():
             )
             # '''
 
-            login_result = KitsuManager.login(
+            login_result = kitsuManager.login(
                 result['Server'],
                 result['User'],
                 result['Password']
@@ -236,12 +236,12 @@ class LoginMenuitem():
                 )
 
             '''
-            if KitsuManager.state == KitsuManager.LOGGED_OUT_STATE:
+            if kitsuManager.state == kitsuManager.LOGGED_OUT_STATE:
                 self.menuItem.set_title('Login to Kitsu')
-            elif KitsuManager.state == KitsuManager.LOGGING_IN_STATE:
+            elif kitsuManager.state == kitsuManager.LOGGING_IN_STATE:
                 self.menuItem.set_title('Logging in ...')
             else:
-                self.menuItem.set_title(f'Logout {KitsuManager.get_username()}')
+                self.menuItem.set_title(f'Logout {kitsuManager.get_username()}')
             '''
 
 
