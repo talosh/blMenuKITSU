@@ -26,6 +26,8 @@ import gazu
 if packages_folder in sys.path:
     sys.path.remove(packages_folder)
 
+pprint (dir(gazu))
+
 class Prefs(dict):
     # subclass of a dict()
         
