@@ -215,7 +215,7 @@ class LoginMenuitem():
             # '''
             flapiManager.app.message_dialog( 
                 "Dialog Done",
-                "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
+                "Server: %s, User: %s, Pass %s." % (result['Server'], result['User'], result['Password']),
                 ["OK"]
             )
             # '''
