@@ -9,6 +9,8 @@ Place blMenuKitsu.py file and blMenuKitsu.packages folder to Baselight scripts f
 
 blMenuKitsu depends on [Gazu](https://github.com/cgwire/gazu) - python API for Kitsu / Zou:  
 
+Gazu version should be up to date with Kitsu / Zou installed.  
+
 At the moment of writing Gazu had additional packages that were not part of a standard Baselight python distribution:  
 [Deprecated](https://pypi.org/project/Deprecated/#files)  
 [SocketIO](https://pypi.org/project/python-socketio/#files)
