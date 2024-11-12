@@ -231,6 +231,8 @@ class AboutMenuItem():
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
 
+
+    def handle_select_signal( self, sender, signal, args ):
         flapiManager.app.message_dialog( 
             f'Baselught to Kitsu connector',
             f'Version: {settings.get("version")}, Gazu: {gazu.__version__}',
