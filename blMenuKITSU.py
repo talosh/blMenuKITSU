@@ -229,7 +229,7 @@ class LoginMenuitem():
             if login_result['status'] is None:
                 flapiManager.app.message_dialog( 
                     'Unable to Login',
-                    f'Server: {result["Server"]}\nUser: {result["User"]}\nReason: {login_result['message']}',
+                    f'Server: {result["Server"]}\nUser: {result["User"]}\nReason: {login_result["message"]}',
                     ["OK"]
                 )
 
