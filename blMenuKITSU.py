@@ -164,7 +164,7 @@ class KitsuManager():
 
         self.possibly_missing_assets = []
         
-    def login(self):
+    def login(self, *args):
         return {'status': None, 'message': 'Huipizda'}
 
 class KitsuCommandsMenu:
@@ -220,7 +220,11 @@ class LoginMenuitem():
             )
             # '''
 
-            login_result = KitsuManager.login()
+            login_result = KitsuManager.login(
+                result['Server'],
+                result['User'],
+                result['Password']
+            )
 
             if login_result['status'] is None:
                 flapiManager.app.message_dialog( 
