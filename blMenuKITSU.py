@@ -234,14 +234,12 @@ class LoginMenuitem():
                     ["OK"]
                 )
 
-            '''
             if kitsuManager.state == kitsuManager.LOGGED_OUT_STATE:
                 self.menuItem.set_title('Login to Kitsu')
             elif kitsuManager.state == kitsuManager.LOGGING_IN_STATE:
                 self.menuItem.set_title('Logging in ...')
             else:
                 self.menuItem.set_title(f'Logout {kitsuManager.get_username()}')
-            '''
 
 
     def handle_update_signal(self, sender, signal, args):
