@@ -220,7 +220,7 @@ class LoginMenuitem():
 
 
     def handle_update_signal(self, sender, signal, args):
-        pass
+        self.menuItem.set_enabled('gazu' in sys.modules)
         '''
         global scene
         # Enable menu item only if a scene is open
