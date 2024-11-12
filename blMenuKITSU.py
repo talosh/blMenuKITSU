@@ -218,6 +218,19 @@ class LoginMenuitem():
             )
             '''
 
+            login_result = KitsuManager.login(
+                result['Server'],
+                result['User'],
+                result['Password']
+            )
+
+            if login_result['status'] is None:
+                flapiManager.app.message_dialog( 
+                    'Unable to Login',
+                    f'Server: {result["Server"]}\nUser: {result["User"]}\nReason: {login_result['message']}',
+                    ["OK"]
+                )
+
             if KitsuManager.state == KitsuManager.LOGGED_OUT_STATE:
                 self.menuItem.set_title('Login to Kitsu')
             elif KitsuManager.state == KitsuManager.LOGGING_IN_STATE:
@@ -228,12 +241,6 @@ class LoginMenuitem():
 
     def handle_update_signal(self, sender, signal, args):
         self.menuItem.set_enabled('gazu' in sys.modules)
-        '''
-        global scene
-        # Enable menu item only if a scene is open
-        scene = app.get_current_scene()
-        list_dialog_menu_item.set_enabled(scene != None)
-        '''
 
 
 class AboutMenuItem():
