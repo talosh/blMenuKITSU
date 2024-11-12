@@ -7,8 +7,8 @@ Place blMenuKitsu.py file and blMenuKitsu.packages folder to Baselight scripts f
 
 ### Packages and dependendencies
 
-blMenuKitsu depends on Gazu - the official python API for Kitsu / Zou:  
-[https://github.com/cgwire/gazu](https://github.com/cgwire/gazu)  
+blMenuKitsu depends on [Gazu](https://github.com/cgwire/gazu) - python API for Kitsu / Zou:  
+
 At the moment of writing Gazu had additional packages that were not part of a standard Baselight python distribution:  
 [Deprecated](https://pypi.org/project/Deprecated/#files)  
 [Warpt](https://pypi.org/project/wrapt/#files)  
