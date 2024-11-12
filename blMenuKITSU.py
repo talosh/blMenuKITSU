@@ -252,9 +252,14 @@ class AboutMenuItem():
         except Exception as e:
             gazu_str = f'Unable to import Gazu: {e}'
 
+        major = sys.version_info.major
+        minor = sys.version_info.minor
+        micro = sys.version_info.micro
+        python_str = f'Python version {major}.{minor}.{micro}'
+
         flapiManager.app.message_dialog( 
             f'Baselught to Kitsu connector',
-            f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}',
+            f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}\n{python_str}',
             ["OK"]
         )
 
