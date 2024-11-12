@@ -225,7 +225,7 @@ class LoginMenuitem():
             login_result = KitsuManager.login(
                 result['Server'],
                 result['User'],
-                result['Password']
+                result['Password'],
             )
 
             if login_result['status'] is None:
