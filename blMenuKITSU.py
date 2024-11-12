@@ -210,18 +210,20 @@ class LoginMenuitem():
             # Need to fetch an instance of the Application class to
             # use the message_dialog method
             #
+            '''
             flapiManager.app.message_dialog( 
                 "Dialog Done",
                 "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
                 ["OK"]
             )
+            '''
 
-        if KitsuManager.state == KitsuManager.LOGGED_OUT_STATE:
-            self.menuItem.set_title('Login to Kitsu')
-        elif KitsuManager.state == KitsuManager.LOGGING_IN_STATE:
-            self.menuItem.set_title('Logging in ...')
-        else:
-            self.menuItem.set_title(f'Logout {KitsuManager.get_username()}')
+            if KitsuManager.state == KitsuManager.LOGGED_OUT_STATE:
+                self.menuItem.set_title('Login to Kitsu')
+            elif KitsuManager.state == KitsuManager.LOGGING_IN_STATE:
+                self.menuItem.set_title('Logging in ...')
+            else:
+                self.menuItem.set_title(f'Logout {KitsuManager.get_username()}')
 
 
     def handle_update_signal(self, sender, signal, args):
