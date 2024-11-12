@@ -164,6 +164,8 @@ class KitsuManager():
 
         self.possibly_missing_assets = []
         
+    def login(self, server, user, password):
+        return {'status': None, 'message': 'Huipizda'}
 
 class KitsuCommandsMenu:
     menu = None
