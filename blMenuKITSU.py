@@ -167,6 +167,7 @@ class KitsuManager():
     def login(self, *args):
         return {'status': None, 'message': 'Huipizda'}
 
+
 class KitsuCommandsMenu:
     menu = None
 
