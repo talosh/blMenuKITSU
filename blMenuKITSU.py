@@ -24,7 +24,7 @@ if packages_folder not in sys.path:
 try:
     import gazu
 except Exception as e:
-    print (f'{settings.get("app_name")}: Unable to import Gazu: {e}')
+    print (f'[{settings.get("app_name")}]: Unable to import Gazu: {e}')
 if packages_folder in sys.path:
     sys.path.remove(packages_folder)
 
