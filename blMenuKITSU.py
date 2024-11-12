@@ -137,7 +137,7 @@ class FLAPIManager():
 
 
 class KitsuManager():
-    # A class to manage Frame.io REST client calls
+    # A class to manage Kitsu client calls
 
     def __init__(self):
 
