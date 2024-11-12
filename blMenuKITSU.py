@@ -248,7 +248,7 @@ class AboutMenuItem():
             import gazu
             if packages_folder in sys.path:
                 sys.path.remove(packages_folder)
-            gazu_str = f'Gazu: {gazu.__version__}'
+            gazu_str = f'Gazu version: {gazu.__version__}'
         except Exception as e:
             gazu_str = f'Unable to import Gazu: {e}'
 
