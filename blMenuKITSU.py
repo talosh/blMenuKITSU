@@ -150,8 +150,10 @@ class KitsuManager():
         self.login_request_in_progress = False
 
         self.kitsu_client = None
-        self.kitsu_account_id = None
+        self.kitsu_user = None
         self.kitsu_account_name = None
+
+        self.kitsu_account_id = None
         self.kitsu_token = None
         self.authenticated = False
         self.data_hierarchy = {}
@@ -164,8 +166,28 @@ class KitsuManager():
 
         self.possibly_missing_assets = []
         
-    def login(self, server, user, password):
-        return {'status': None, 'message': 'Testing loop only'}
+    def login(self, host, user, password):
+        try:
+            if not host.endswith('/api/'):
+                if self.kitsu_host.endswith('/'):
+                    host = host + 'api/'
+                else:
+                    host = host + '/api/'
+            elif host.endswith('/api'):
+                host = host + ('/')
+                self.kitsu_client = gazu.client.create_client(host)
+                if not gazu.client.host_is_up(client = self.kitsu_client):
+                    return {'status': None, 'message': f'Host {host} is unreachable'}
+                result = gazu.log_in(user, password, client = self.kitsu_client)
+                self.kitsu_user = gazu.client.get_current_user(client = self.kitsu_client)
+                self.kitsu_account_name = self.user.get('full_name')
+                self.log_debug('connected to kitsu as %s' % self.user_name)
+                return {'status': True, 'message': 'Testing loop only'}
+        except Exception as e:
+            self.gazu_client = None
+            self.user = None
+            self.user_name = None
+            return {'status': None, 'message': pformat(e)}
 
 
 class KitsuCommandsMenu:
@@ -186,7 +208,7 @@ class LoginMenuitem():
         self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
-
+        
         self.items = [
             flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = ""),
             flapi.DialogItem(Key="User", Label="User", Type=flapi.DIT_STRING, Default = ""),
@@ -233,6 +255,12 @@ class LoginMenuitem():
                     f'Server: {result["Server"]}\nUser: {result["User"]}\nReason: {login_result["message"]}',
                     ["OK"]
                 )
+            else:
+                flapiManager.app.message_dialog( 
+                    'Login succesful',
+                    f'Server: {result["Server"]}\n{login_result["message"]}',
+                    ["OK"]
+                )
 
             if kitsuManager.state == kitsuManager.LOGGED_OUT_STATE:
                 self.menuItem.set_title('Login to Kitsu')
@@ -240,7 +268,6 @@ class LoginMenuitem():
                 self.menuItem.set_title('Logging in ...')
             else:
                 self.menuItem.set_title(f'Logout {kitsuManager.get_username()}')
-
 
     def handle_update_signal(self, sender, signal, args):
         self.menuItem.set_enabled('gazu' in sys.modules)
