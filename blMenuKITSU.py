@@ -347,27 +347,6 @@ class AboutMenuItem():
 
 scene = None
 
-def onListDialogMenuItemSelected(sender, signal, args):
-    dialog = KitsuLoginDialog(conn)
-    result = dialog.show()
-    if result:
-        # Show results
-        #
-        # Need to fetch an instance of the Application class to
-        # use the message_dialog method
-        #
-        app.message_dialog( 
-            "Dialog Done",
-            "Server '%s' User '%s' Pass %s." % (result['Server'], result['User'], result['Password']),
-            ["OK"]
-        )
-
-def onListDialogMenuItemUpdate(sender, signal, args):
-    global scene
-    # Enable menu item only if a scene is open
-    scene = app.get_current_scene()
-    list_dialog_menu_item.set_enabled(scene != None)
-
 flapiManager = FLAPIManager()
 kitsuManager = KitsuManager()
 
