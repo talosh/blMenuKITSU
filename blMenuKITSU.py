@@ -3,6 +3,8 @@ import sys
 import inspect
 import platform
 
+import urllib
+
 import flapi
 
 from pprint import pprint, pformat
