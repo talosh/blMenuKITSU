@@ -3,7 +3,7 @@ import sys
 import inspect
 import platform
 
-import urllib
+from urllib.parse import urljoin, urlparse
 
 import flapi
 
@@ -167,7 +167,41 @@ class KitsuManager():
         self.data_hierarchy_idx = 0
 
         self.possibly_missing_assets = []
-        
+
+    def login(self, host, user, password):
+        try:
+            # Ensure the host URL ends with '/api/'
+            parsed_host = urlparse(host)
+            if not parsed_host.scheme:
+                return {'status': None, 'message': f'Invalid host URL: {host}'}
+
+            if not host.endswith('/api/'):
+                host = urljoin(host.rstrip('/') + '/', 'api/')
+
+            # Create the client and check if the host is up
+            self.kitsu_client = gazu.client.create_client(host)
+            if not gazu.client.host_is_up(client=self.kitsu_client):
+                return {'status': None, 'message': f'Host {host} is unreachable'}
+
+            # Attempt to log in
+            result = gazu.log_in(user, password, client=self.kitsu_client)
+            if not result:
+                return {'status': None, 'message': 'Invalid username or password'}
+
+            # Fetch the current user details
+            self.kitsu_user = gazu.client.get_current_user(client=self.kitsu_client)
+            self.kitsu_account_name = self.kitsu_user.get('full_name')
+            self.log_debug(f'Connected to Kitsu as {self.kitsu_account_name}')
+            return {'status': True, 'message': 'Login successful'}
+
+        except Exception as e:
+            self.kitsu_client = None
+            self.kitsu_user = None
+            self.kitsu_account_name = None
+            return {'status': None, 'message': str(e)}
+
+
+    '''
     def login(self, host, user, password):
         try:
             if not host.endswith('/api/'):
@@ -190,6 +224,7 @@ class KitsuManager():
             self.user = None
             self.user_name = None
             return {'status': None, 'message': pformat(e)}
+    '''
 
 
 class KitsuCommandsMenu:
