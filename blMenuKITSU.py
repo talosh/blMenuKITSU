@@ -355,6 +355,13 @@ loginMenuItem = LoginMenuitem()
 aboutMenuItem = AboutMenuItem()
 
 '''
+
+def onListDialogMenuItemUpdate(sender, signal, args):
+    global scene
+    # Enable menu item only if a scene is open
+    scene = app.get_current_scene()
+    list_dialog_menu_item.set_enabled(scene != None)
+
 # Connect to FLAPI
 conn = flapi.Connection.get() 
 conn.connect()
