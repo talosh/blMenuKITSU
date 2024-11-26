@@ -339,7 +339,7 @@ class AboutMenuItem():
         python_str = f"Baselight's Python version: {major}.{minor}.{micro}"
 
         flapiManager.app.message_dialog( 
-            f'Baselught to Kitsu connector',
+            f'Baselight to Kitsu connector',
             f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}\n{python_str}',
             ["OK"]
         )
