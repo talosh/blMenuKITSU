@@ -421,7 +421,7 @@ kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
 loginMenuItem = LoginMenuitem()
-createShotsMenuItem = CreateShotsMenuItem()
+# createShotsMenuItem = CreateShotsMenuItem()
 aboutMenuItem = AboutMenuItem()
 
 '''
