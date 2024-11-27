@@ -172,6 +172,8 @@ class KitsuManager():
 
         self.possibly_missing_assets = []
 
+        self.log_debug = prefs.log
+
     def login(self, host, user, password):
         try:
             # Ensure the host URL ends with '/api/'
