@@ -344,7 +344,7 @@ class LoginMenuitem():
 
 class PopulateMenuItem():
     def __init__(self):
-        self.menuItem = flapiManager.conn.MenuItem.create('Create shots', 'uk.ltd.filmlight.kitsu.createShots')
+        self.menuItem = flapiManager.conn.MenuItem.create('Populate shots', 'uk.ltd.filmlight.kitsu.populate')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
 
