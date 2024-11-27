@@ -175,12 +175,6 @@ class KitsuManager():
         self.log_debug = prefs.log
 
     def login(self, host, user, password):
-        if self.state == self.LOGGED_IN_STATE:
-            self.state = self.LOGGED_OUT_STATE
-            self.kitsu_client = None
-            self.kitsu_user = None
-            self.kitsu_account_name = None
-            return {'status': True, 'message': 'Logout successful'}
         try:
             # Ensure the host URL ends with '/api/'
             parsed_host = urlparse(host)
@@ -221,6 +215,11 @@ class KitsuManager():
             message = f'{exception_name} {str(e)}'
             return {'status': None, 'message': message}
 
+    def logout(self):
+        self.state = self.LOGGED_OUT_STATE
+        self.kitsu_client = None
+        self.kitsu_user = None
+        self.kitsu_account_name = None
 
     '''
     def login(self, host, user, password):
@@ -266,7 +265,16 @@ class LoginMenuitem():
         self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
-        
+        if kitsuManager.state == kitsuManager.LOGGED_OUT_STATE:
+            kitsuManager.logout()
+            flapiManager.app.message_dialog( 
+                'Kitsu',
+                f'Logout succesful',
+                ["OK"]
+                )
+            self.menuItem.set_title('Login to Kitsu')
+            return
+            
         self.items = [
             flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = prefs.get('Server', "")),
             flapi.DialogItem(Key="User", Label="User", Type=flapi.DIT_STRING, Default = prefs.get('User', "")),
