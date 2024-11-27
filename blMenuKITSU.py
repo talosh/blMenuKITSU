@@ -376,7 +376,8 @@ class CreateShotsMenuItem():
         )
 
     def handle_update_signal(self, sender, signal, args):
-        self.menuItem.set_enabled('gazu' in sys.modules)
+        scene = flapiManager.app.get_current_scene()
+        self.menuItem.set_enabled((scene is not None) and (kitsuManager.state == kitsuManager.LOGGED_IN_STATE))
 
 class AboutMenuItem():
     def __init__(self):
@@ -412,8 +413,7 @@ class AboutMenuItem():
         )
 
     def handle_update_signal(self, sender, signal, args):
-        scene = flapiManager.app.get_current_scene()
-        self.menuItem.set_enabled((scene is not None) and (kitsuManager.state == kitsuManager.LOGGED_IN_STATE))
+        self.menuItem.set_enabled('gazu' in sys.modules)
 
 prefs = Prefs(**settings)
 
