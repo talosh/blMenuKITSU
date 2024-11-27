@@ -342,15 +342,14 @@ class LoginMenuitem():
         self.menuItem.set_enabled('gazu' in sys.modules)
 
 
-class AboutMenuItem():
+class CreateShotsMenuItem():
     def __init__(self):
-        self.menuItem = flapiManager.conn.MenuItem.create(f'Version {settings.get("version")}', 'uk.ltd.filmlight.kitsu.about')
+        self.menuItem = flapiManager.conn.MenuItem.create('Create shots', 'uk.ltd.filmlight.kitsu.createShots')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
-
+        self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
-        
         try:
             packages_folder = os.path.join(
                 os.path.dirname(inspect.getfile(lambda: None)),
@@ -376,8 +375,45 @@ class AboutMenuItem():
             ["OK"]
         )
 
+    def handle_update_signal(self, sender, signal, args):
+        self.menuItem.set_enabled('gazu' in sys.modules)
 
-scene = None
+class AboutMenuItem():
+    def __init__(self):
+        self.menuItem = flapiManager.conn.MenuItem.create(f'Version {settings.get("version")}', 'uk.ltd.filmlight.kitsu.about')
+        kitsuCommandsMenu.menu.add_item(self.menuItem)
+        self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
+
+
+    def handle_select_signal( self, sender, signal, args ):
+        try:
+            packages_folder = os.path.join(
+                os.path.dirname(inspect.getfile(lambda: None)),
+                f'{settings["app_name"]}.packages'
+            )
+            if packages_folder not in sys.path:
+                sys.path.append(packages_folder)
+            import gazu
+            if packages_folder in sys.path:
+                sys.path.remove(packages_folder)
+            gazu_str = f'Gazu version: {gazu.__version__}'
+        except Exception as e:
+            gazu_str = f'Unable to import Gazu: {e}'
+
+        major = sys.version_info.major
+        minor = sys.version_info.minor
+        micro = sys.version_info.micro
+        python_str = f"Baselight's Python version: {major}.{minor}.{micro}"
+
+        flapiManager.app.message_dialog( 
+            f'Baselight to Kitsu connector',
+            f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}\n{python_str}',
+            ["OK"]
+        )
+
+    def handle_update_signal(self, sender, signal, args):
+        scene = flapiManager.app.get_current_scene()
+        self.menuItem.set_enabled(scene != None)
 
 prefs = Prefs(**settings)
 
@@ -386,6 +422,7 @@ kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
 loginMenuItem = LoginMenuitem()
+
 aboutMenuItem = AboutMenuItem()
 
 '''
