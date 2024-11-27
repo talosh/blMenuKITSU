@@ -61,6 +61,7 @@ class Prefs(dict):
             self.prefs_folder,
             self.hostname,
         )
+        self.load_prefs()
 
     def log(self, message):
         print(f'[{self.bundle_name}] {message}')
