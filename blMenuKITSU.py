@@ -356,6 +356,16 @@ class PopulateMenuItem():
             )
             return False
 
+        nshots = scene.get_num_shots()
+        if not nshots:
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Baselight scene has no shots',
+                ["OK"]
+            )
+            return False
+
+
         
         try:
             packages_folder = os.path.join(
