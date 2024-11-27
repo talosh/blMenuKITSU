@@ -175,6 +175,12 @@ class KitsuManager():
         self.log_debug = prefs.log
 
     def login(self, host, user, password):
+        if self.state == self.LOGGED_IN_STATE:
+            self.state = self.LOGGED_OUT_STATE
+            self.kitsu_client = None
+            self.kitsu_user = None
+            self.kitsu_account_name = None
+            return {'status': True, 'message': 'Logout successful'}
         try:
             # Ensure the host URL ends with '/api/'
             parsed_host = urlparse(host)
@@ -210,6 +216,7 @@ class KitsuManager():
             self.kitsu_client = None
             self.kitsu_user = None
             self.kitsu_account_name = None
+            self.state = self.LOGGED_OUT_STATE
             exception_name = e.__class__.__name__
             message = f'{exception_name} {str(e)}'
             return {'status': None, 'message': message}
