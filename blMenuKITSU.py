@@ -372,8 +372,6 @@ class PopulateMenuItem():
                 ["OK"]
             )
             return False
-
-
         
         try:
             packages_folder = os.path.join(
