@@ -265,7 +265,7 @@ class LoginMenuitem():
         self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
-        if kitsuManager.state == kitsuManager.LOGGED_OUT_STATE:
+        if kitsuManager.state == kitsuManager.LOGGED_IN_STATE:
             kitsuManager.logout()
             flapiManager.app.message_dialog( 
                 'Kitsu',
