@@ -350,7 +350,7 @@ class PopulateMenuItem():
         if kitsuManager.state != kitsuManager.LOGGED_IN_STATE:
             flapiManager.app.message_dialog( 
                 f'{settings.get("menu_group_name")}',
-                f'Please log in to Kitsu',
+                f'Please log in to Kitsu first',
                 ["OK"]
             )
             return False
