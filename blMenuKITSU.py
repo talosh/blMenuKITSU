@@ -347,7 +347,6 @@ class PopulateMenuItem():
         self.menuItem = flapiManager.conn.MenuItem.create('Create shots', 'uk.ltd.filmlight.kitsu.createShots')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
-        self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
         try:
