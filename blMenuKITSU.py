@@ -187,6 +187,8 @@ class KitsuManager():
             if not gazu.client.host_is_up(client=self.kitsu_client):
                 return {'status': None, 'message': f'Host {host} is unreachable'}
 
+            return {'status': None, 'message': 'Hello'}
+
             # Attempt to log in
             result = gazu.log_in(user, password, client=self.kitsu_client)
             if not result:
