@@ -173,7 +173,7 @@ class KitsuManager():
         self.possibly_missing_assets = []
 
     def login(self, host, user, password):
-        try:
+        # try:
             # Ensure the host URL ends with '/api/'
             parsed_host = urlparse(host)
             if not parsed_host.scheme:
@@ -188,11 +188,7 @@ class KitsuManager():
                 return {'status': None, 'message': f'Host {host} is unreachable'}
 
             # Attempt to log in
-            try:
-                result = gazu.log_in(user, password, client=self.kitsu_client)
-                return {'status': None, 'message': 'Hello3'}
-            except Exception as e:
-                return {'status': None, 'message': f'{e}'}
+            result = gazu.log_in(user, password, client=self.kitsu_client)
             
             # if not result:
             #     return {'status': None, 'message': 'Invalid username or password'}
@@ -204,11 +200,11 @@ class KitsuManager():
             self.log_debug(f'Connected to Kitsu as {self.kitsu_account_name}')
             return {'status': True, 'message': 'Login successful'}
 
-        except Exception as e:
-            self.kitsu_client = None
-            self.kitsu_user = None
-            self.kitsu_account_name = None
-            return {'status': None, 'message': str(e)}
+        # except Exception as e:
+        #    self.kitsu_client = None
+        #    self.kitsu_user = None
+        #    self.kitsu_account_name = None
+        #    return {'status': None, 'message': str(e)}
 
 
     '''
