@@ -209,7 +209,7 @@ class KitsuManager():
             self.kitsu_user = None
             self.kitsu_account_name = None
             exception_name = e.__class__.__name__
-            message = f'{exception_name}: {str(e)}'
+            message = f'{exception_name} {str(e)}'
             return {'status': None, 'message': message}
 
 
