@@ -423,7 +423,7 @@ flapiManager = FLAPIManager()
 kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
-# loginMenuItem = LoginMenuitem()
+loginMenuItem = LoginMenuitem()
 # populateMenuItem = PopulateMenuItem()
 aboutMenuItem = AboutMenuItem()
 
