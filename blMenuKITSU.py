@@ -13,7 +13,7 @@ settings = {
     'menu_group_name': 'Kitsu',
     'debug': False,
     'app_name': 'blMenuKITSU',
-    'version': 'v0.0.2.dev.001',
+    'version': 'v0.0.2.dev.002',
 }
 
 packages_folder = os.path.join(
@@ -256,8 +256,8 @@ class LoginMenuitem():
         ]
 
         self.settings = {
-            "Server": "",
-            "User": "",
+            "Server": prefs.get('Server', ""),
+            "User": prefs.get('User', ""),
             "Password": "",
         }
 
