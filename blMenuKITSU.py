@@ -342,7 +342,7 @@ class LoginMenuitem():
         self.menuItem.set_enabled('gazu' in sys.modules)
 
 
-class CreateShotsMenuItem():
+class PopulateMenuItem():
     def __init__(self):
         self.menuItem = flapiManager.conn.MenuItem.create('Create shots', 'uk.ltd.filmlight.kitsu.createShots')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
@@ -376,8 +376,9 @@ class CreateShotsMenuItem():
         )
 
     def handle_update_signal(self, sender, signal, args):
-        scene = flapiManager.app.get_current_scene()
-        self.menuItem.set_enabled((scene is not None) and (kitsuManager.state == kitsuManager.LOGGED_IN_STATE))
+        pass
+        # scene = flapiManager.app.get_current_scene()
+        # self.menuItem.set_enabled((scene is not None) and (kitsuManager.state == kitsuManager.LOGGED_IN_STATE))
 
 class AboutMenuItem():
     def __init__(self):
