@@ -347,6 +347,14 @@ class PopulateMenuItem():
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
 
     def handle_select_signal( self, sender, signal, args ):
+        if kitsuManager.state != kitsuManager.LOGGED_IN_STATE:
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Please log in to Kitsu',
+                ["OK"]
+            )
+            return False
+
         scene = flapiManager.app.get_current_scene()
         if not scene:
             flapiManager.app.message_dialog( 
