@@ -282,12 +282,16 @@ class LoginMenuitem():
                 ["OK"]
             )
             '''
+            prefs['Server'] = result['Server']
+            prefs['User'] = result['User']
+            prefs.save_prefs()
 
             login_result = kitsuManager.login(
                 result['Server'],
                 result['User'],
                 result['Password']
             )
+
 
             if login_result['status'] is None:
                 flapiManager.app.message_dialog( 
