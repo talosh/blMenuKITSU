@@ -413,7 +413,7 @@ class AboutMenuItem():
 
     def handle_update_signal(self, sender, signal, args):
         scene = flapiManager.app.get_current_scene()
-        self.menuItem.set_enabled(scene != None)
+        self.menuItem.set_enabled((scene is not None) and (kitsuManager.state == kitsuManager.LOGGED_IN_STATE))
 
 prefs = Prefs(**settings)
 
