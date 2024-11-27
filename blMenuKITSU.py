@@ -199,6 +199,7 @@ class KitsuManager():
             self.kitsu_user = gazu.client.get_current_user(client=self.kitsu_client)
             self.kitsu_account_name = self.kitsu_user.get('full_name')
             self.log_debug(f'Connected to Kitsu as {self.kitsu_account_name}')
+            self.state = self.LOGGED_IN_STATE
             return {'status': True, 'message': 'Login successful'}
         #except gazu.exception.AuthFailedException:
         #    self.kitsu_client = None
