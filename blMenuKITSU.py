@@ -385,7 +385,6 @@ class AboutMenuItem():
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
 
-
     def handle_select_signal( self, sender, signal, args ):
         try:
             packages_folder = os.path.join(
@@ -422,7 +421,7 @@ kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
 loginMenuItem = LoginMenuitem()
-
+createShotsMenuItem = CreateShotsMenuItem()
 aboutMenuItem = AboutMenuItem()
 
 '''
