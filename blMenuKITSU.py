@@ -253,7 +253,7 @@ class LoginMenuitem():
         self.items = [
             flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = prefs.get('Server', "")),
             flapi.DialogItem(Key="User", Label="User", Type=flapi.DIT_STRING, Default = prefs.get('User', "")),
-            flapi.DialogItem(Key="Password", Label="Password", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Password", Label="Password", Type=flapi.DIT_STRING, Default = "", Password = 1),
         ]
 
         self.settings = {
