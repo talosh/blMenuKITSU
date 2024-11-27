@@ -338,8 +338,7 @@ class LoginMenuitem():
                 self.menuItem.set_title(f'Logout {kitsuManager.kitsu_account_name}')
 
     def handle_update_signal(self, sender, signal, args):
-        self.menuItem.set_enabled(False)
-        # self.menuItem.set_enabled('gazu' in sys.modules)
+        self.menuItem.set_enabled('gazu' in sys.modules)
 
 class PopulateMenuItem():
     def __init__(self):
@@ -373,11 +372,6 @@ class PopulateMenuItem():
             ["OK"]
         )
 
-    def handle_update_signal(self, sender, signal, args):
-        self.menuItem.set_enabled(False)
-        # scene = flapiManager.app.get_current_scene()
-        # self.menuItem.set_enabled((scene is not None) and (kitsuManager.state == kitsuManager.LOGGED_IN_STATE))
-
 class AboutMenuItem():
     def __init__(self):
         self.menuItem = flapiManager.conn.MenuItem.create(f'Version {settings.get("version")}', 'uk.ltd.filmlight.kitsu.about')
@@ -410,10 +404,6 @@ class AboutMenuItem():
             f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}\n{python_str}',
             ["OK"]
         )
-
-    def handle_update_signal(self, sender, signal, args):
-        self.menuItem.set_enabled(False)
-        # self.menuItem.set_enabled('gazu' in sys.modules)
 
 prefs = Prefs(**settings)
 
