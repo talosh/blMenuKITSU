@@ -188,8 +188,11 @@ class KitsuManager():
                 return {'status': None, 'message': f'Host {host} is unreachable'}
 
             # Attempt to log in
-            result = gazu.log_in(user, password, client=self.kitsu_client)
-            return {'status': None, 'message': f'Hello2'}
+            try:
+                result = gazu.log_in(user, password, client=self.kitsu_client)
+            except Exception as e:
+                return {'status': None, 'message': f'{e}'}
+            
             if not result:
                 return {'status': None, 'message': 'Invalid username or password'}
 
