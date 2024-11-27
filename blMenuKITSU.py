@@ -62,6 +62,9 @@ class Prefs(dict):
             self.hostname,
         )
 
+    def log(self, message):
+        print(f'[{self.bundle_name}] {message}')
+
     def log_debug(self, message):
         if self.debug:
             try:
@@ -80,7 +83,7 @@ class Prefs(dict):
             with open(prefs_file_path, 'r') as prefs_file:
                 self.update(json.load(prefs_file))
             self.log_debug('preferences loaded from %s' % prefs_file_path)
-            self.log_debug('preferences contents:\n' + json.dumps(self.prefs, indent=4))
+            self.log_debug('preferences contents:\n' + json.dumps(self, indent=4))
         except Exception as e:
             self.log('unable to load preferences from %s' % prefs_file_path)
             self.log_debug(e)
@@ -106,7 +109,7 @@ class Prefs(dict):
             self.log_debug('preferences saved to %s' % prefs_file_path)
             self.log_debug('preferences contents:\n' + json.dumps(self, indent=4))
         except Exception as e:
-            print('unable to save preferences to %s' % prefs_file_path)
+            print(f'Unable to save preferences to {prefs_file_path}: {e}')
             self.log_debug(e)
             
         return True
@@ -247,8 +250,8 @@ class LoginMenuitem():
     def handle_select_signal( self, sender, signal, args ):
         
         self.items = [
-            flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = ""),
-            flapi.DialogItem(Key="User", Label="User", Type=flapi.DIT_STRING, Default = ""),
+            flapi.DialogItem(Key="Server", Label="Server", Type=flapi.DIT_STRING, Default = prefs.get('Server', "")),
+            flapi.DialogItem(Key="User", Label="User", Type=flapi.DIT_STRING, Default = prefs.get('User', "")),
             flapi.DialogItem(Key="Password", Label="Password", Type=flapi.DIT_STRING, Default = ""),
         ]
 
@@ -346,6 +349,8 @@ class AboutMenuItem():
 
 
 scene = None
+
+prefs = Prefs(**settings)
 
 flapiManager = FLAPIManager()
 kitsuManager = KitsuManager()
