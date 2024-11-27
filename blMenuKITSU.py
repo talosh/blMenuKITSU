@@ -326,7 +326,7 @@ class LoginMenuitem():
                 )
             else:
                 flapiManager.app.message_dialog( 
-                    'Login succesful',
+                    'Kitsu',
                     f'Server: {result["Server"]}\n{login_result["message"]}',
                     ["OK"]
                 )
