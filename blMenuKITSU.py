@@ -173,7 +173,7 @@ class KitsuManager():
         self.possibly_missing_assets = []
 
     def login(self, host, user, password):
-        # try:
+        try:
             # Ensure the host URL ends with '/api/'
             parsed_host = urlparse(host)
             if not parsed_host.scheme:
@@ -199,12 +199,16 @@ class KitsuManager():
             self.kitsu_account_name = self.kitsu_user.get('full_name')
             self.log_debug(f'Connected to Kitsu as {self.kitsu_account_name}')
             return {'status': True, 'message': 'Login successful'}
-
-        # except Exception as e:
-        #    self.kitsu_client = None
-        #    self.kitsu_user = None
-        #    self.kitsu_account_name = None
-        #    return {'status': None, 'message': str(e)}
+        except gazu.exception.AuthFailedException:
+            self.kitsu_client = None
+            self.kitsu_user = None
+            self.kitsu_account_name = None
+            return {'status': None, 'message': 'Invalid name or password'}
+        except Exception as e:
+            self.kitsu_client = None
+            self.kitsu_user = None
+            self.kitsu_account_name = None
+            return {'status': None, 'message': str(e)}
 
 
     '''
