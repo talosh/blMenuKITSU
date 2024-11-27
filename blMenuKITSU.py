@@ -412,7 +412,7 @@ kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
 loginMenuItem = LoginMenuitem()
-# populateMenuItem = PopulateMenuItem()
+populateMenuItem = PopulateMenuItem()
 aboutMenuItem = AboutMenuItem()
 
 '''
