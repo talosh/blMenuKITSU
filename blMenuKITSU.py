@@ -328,7 +328,7 @@ class LoginMenuitem():
             elif kitsuManager.state == kitsuManager.LOGGING_IN_STATE:
                 self.menuItem.set_title('Logging in ...')
             else:
-                self.menuItem.set_title(f'Logout {kitsuManager.get_username()}')
+                self.menuItem.set_title(f'Logout {kitsuManager.kitsu_account_name}')
 
     def handle_update_signal(self, sender, signal, args):
         self.menuItem.set_enabled('gazu' in sys.modules)
