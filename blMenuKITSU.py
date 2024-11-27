@@ -354,7 +354,7 @@ class PopulateMenuItem():
                 f'Unable to query current scene',
                 ["OK"]
             )
-            return None
+            return False
 
         
         try:
