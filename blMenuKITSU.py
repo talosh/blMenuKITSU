@@ -292,7 +292,6 @@ class LoginMenuitem():
                 result['Password']
             )
 
-
             if login_result['status'] is None:
                 flapiManager.app.message_dialog( 
                     'Unable to Login',
