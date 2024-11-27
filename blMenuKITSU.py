@@ -339,8 +339,8 @@ class LoginMenuitem():
                 self.menuItem.set_title(f'Logout {kitsuManager.kitsu_account_name}')
 
     def handle_update_signal(self, sender, signal, args):
-        self.menuItem.set_enabled('gazu' in sys.modules)
-
+        self.menuItem.set_enabled(False)
+        # self.menuItem.set_enabled('gazu' in sys.modules)
 
 class PopulateMenuItem():
     def __init__(self):
