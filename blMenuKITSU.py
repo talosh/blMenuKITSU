@@ -199,16 +199,18 @@ class KitsuManager():
             self.kitsu_account_name = self.kitsu_user.get('full_name')
             self.log_debug(f'Connected to Kitsu as {self.kitsu_account_name}')
             return {'status': True, 'message': 'Login successful'}
-        except gazu.exception.AuthFailedException:
-            self.kitsu_client = None
-            self.kitsu_user = None
-            self.kitsu_account_name = None
-            return {'status': None, 'message': 'Invalid name or password'}
+        #except gazu.exception.AuthFailedException:
+        #    self.kitsu_client = None
+        #    self.kitsu_user = None
+        #    self.kitsu_account_name = None
+        #    return {'status': None, 'message': 'Invalid name or password'}
         except Exception as e:
             self.kitsu_client = None
             self.kitsu_user = None
             self.kitsu_account_name = None
-            return {'status': None, 'message': str(e)}
+            exception_name = e.__class__.__name__
+            message = f'{exception_name}: {str(e)}'
+            return {'status': None, 'message': message}
 
 
     '''
