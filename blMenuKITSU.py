@@ -189,7 +189,7 @@ class KitsuManager():
 
             # Attempt to log in
             result = gazu.log_in(user, password, client=self.kitsu_client)
-            return {'status': None, 'message': 'Hello'}
+            return {'status': None, 'message': f'Hello: {result}'}
             if not result:
                 return {'status': None, 'message': 'Invalid username or password'}
 
