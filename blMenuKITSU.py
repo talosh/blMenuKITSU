@@ -347,6 +347,16 @@ class PopulateMenuItem():
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
 
     def handle_select_signal( self, sender, signal, args ):
+        scene = flapiManager.app.get_current_scene()
+        if not scene:
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Unable to query current scene',
+                ["OK"]
+            )
+            return None
+
+        
         try:
             packages_folder = os.path.join(
                 os.path.dirname(inspect.getfile(lambda: None)),
