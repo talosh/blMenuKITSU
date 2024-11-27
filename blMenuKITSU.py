@@ -261,7 +261,7 @@ class LoginMenuitem():
         self.menuItem = flapiManager.conn.MenuItem.create('Login to Kitsu', 'uk.ltd.filmlight.kitsu.login')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( 'MenuItemSelected', self.handle_select_signal )
-        # self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
+        self.menuItem.connect( 'MenuItemUpdate', self.handle_update_signal )
 
     def handle_select_signal( self, sender, signal, args ):
         if kitsuManager.state == kitsuManager.LOGGED_IN_STATE:
