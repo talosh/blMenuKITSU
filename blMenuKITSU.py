@@ -255,9 +255,6 @@ class KitsuCommandsMenu:
         self.menuItem = flapiManager.conn.MenuItem.create("Kitsu", "uk.ltd.filmlight.kitsu.actions")
         self.menuItem.register(flapi.MENULOCATION_SCENE_MENU)
         self.menuItem.set_sub_menu(self.menu)
-        for item in self.menu:
-            item.menuItem.connect( 'MenuItemUpdate', item.handle_update_signal )
-
 
 class LoginMenuitem():
     def __init__(self):
