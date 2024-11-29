@@ -386,14 +386,16 @@ class PopulateMenuItem():
             ["OK"]
         )
 
+        kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in projects]
+
         self.items = [
             flapi.DialogItem(
                 Key='Project',
                 Label='Project',
                 Type=flapi.DIT_DROPDOWN,\
-                Options = [{"Key": x['id'], "Text": x['name']} for x in projects],
-            )
-            # Default = "hearts")
+                Options = kitsu_project_keys,
+                Default = kitsu_project_keys[0]
+                )
         ]
 
         self.settings = {
