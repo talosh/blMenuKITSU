@@ -394,7 +394,7 @@ class PopulateMenuItem():
                 Label='Project',
                 Type=flapi.DIT_DROPDOWN,\
                 Options = kitsu_project_keys,
-                Default = kitsu_project_keys[0]
+                Default = kitsu_project_keys[0]['Key']
                 )
         ]
 
