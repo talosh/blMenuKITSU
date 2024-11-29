@@ -391,9 +391,9 @@ class PopulateMenuItem():
                 Key='Project',
                 Label='Project',
                 Type=flapi.DIT_DROPDOWN,\
-                Options = [{"Key": x, "Text": x} for x in\
-                    ["hearts", "stars", "horseshoes", "clovers", "blue moons", "unicorns", "rainbows", "red balloons"]],
-                Default = "hearts")
+                Options = [{"Key": x['id'], "Text": x['name']} for x in projects],
+            )
+            # Default = "hearts")
         ]
 
         self.settings = {
