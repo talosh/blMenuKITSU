@@ -380,9 +380,31 @@ class PopulateMenuItem():
 
         projects = kitsuManager.all_open_projects()
 
+        self.items = [
+            flapi.DialogItem(
+                Key='Project',
+                Label='Project',
+                Type=flapi.DIT_DROPDOWN,\
+                Options = [{"Key": x, "Text": x} for x in\
+                    ["hearts", "stars", "horseshoes", "clovers", "blue moons", "unicorns", "rainbows", "red balloons"]],
+                Default = "hearts")
+        ]
+
+        self.settings = {
+            "Project": "",
+        }
+
+        self.dialog = flapiManager.conn.DynamicDialog.create( 
+            "Test",
+            self.items,
+            self.settings
+        )
+
+        result =  self.dialog.show_modal(-200, -50)
+
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{projects}',
+            f'{result}',
             ["OK"]
         )
         return False
