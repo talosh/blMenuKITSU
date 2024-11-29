@@ -221,6 +221,9 @@ class KitsuManager():
         self.kitsu_user = None
         self.kitsu_account_name = None
 
+    def all_open_projects(self):
+        return gazu.project.all_open_projects(client = self.kitsu_client)
+
     '''
     def login(self, host, user, password):
         try:
@@ -374,7 +377,19 @@ class PopulateMenuItem():
                 ["OK"]
             )
             return False
-        
+
+        projects = kitsuManager.all_open_projects()
+
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{projects}',
+            ["OK"]
+        )
+        return False
+
+
+
+        '''
         try:
             packages_folder = os.path.join(
                 os.path.dirname(inspect.getfile(lambda: None)),
@@ -399,6 +414,7 @@ class PopulateMenuItem():
             f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}\n{python_str}',
             ["OK"]
         )
+        '''
 
 class AboutMenuItem():
     def __init__(self):
