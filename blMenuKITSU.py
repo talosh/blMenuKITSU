@@ -415,7 +415,7 @@ class PopulateMenuItem():
             newArgs = args
 
             exclude = set([x['id'] for x in self.kitsu_projects])
-            self.exclude.remove(newArgs['Project'])
+            exclude.remove(newArgs['Project'])
 
             return { 
                 "Valid"     : valid, 
