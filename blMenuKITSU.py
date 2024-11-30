@@ -199,6 +199,14 @@ class FLAPIManager():
         if 'kitsu-uid' in md_names.keys():
             return md_names['kitsu-uid']
         else:
+            if scene.is_read_only():
+                self.app.message_dialog( 
+                    f'{settings.get("menu_group_name")}',
+                    f'Unable to add Kitsu UID metadata column - scene is read-only',
+                    ["OK"]
+                )
+                return None
+
             scene.start_delta('Add kitsu-id metadata column')
             metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
             scene.end_delta()
