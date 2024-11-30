@@ -739,7 +739,7 @@ class UpdateKitsuMenuItem():
             scene.set_transient_write_lock_deltas(True)
             scene.start_delta('Add kitsu metadata to shots')
 
-            for baselight_shot in new_shots:
+            for idx, baselight_shot in enumerate(new_shots):
                 shot_name = create_kitsu_shot_name(baselight_shot)
                 shot_data = build_kitsu_shot_data(baselight_shot)
 
@@ -788,6 +788,8 @@ class UpdateKitsuMenuItem():
 
                 shot.set_metadata( new_md_values )
                 shot.release()
+
+                progressDialog.set_progress(idx / len(new_shots), "")
 
             scene.end_delta()
             scene.set_transient_write_lock_deltas(False)
