@@ -428,7 +428,7 @@ class PopulateMenuItem():
         self.project_scene_dialog_items = [
             flapi.DialogItem(
                 Key='Project',
-                Label='Project: ',
+                Label='Project:\t',
                 Type=flapi.DIT_DROPDOWN,
                 Options = kitsu_project_keys,
                 Default = kitsu_project_keys[0]['Key']
@@ -442,7 +442,7 @@ class PopulateMenuItem():
                 self.project_scene_dialog_items.append(
                     flapi.DialogItem(
                         Key=project['id'],
-                        Label='Sequence: ',
+                        Label='Sequence:\t',
                         Type=flapi.DIT_DROPDOWN,
                         Options = sequence_keys,
                         Default = sequence_keys[0]['Key']
@@ -452,7 +452,7 @@ class PopulateMenuItem():
                 self.project_scene_dialog_items.append(
                     flapi.DialogItem(
                         Key=project['id'],
-                        Label='Sequence: ',
+                        Label='Sequence:\t',
                         Type=flapi.DIT_STATIC_TEXT,
                         Default = 'No sequences found.'
                         )
