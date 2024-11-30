@@ -407,9 +407,9 @@ class LoginMenuitem():
     def handle_update_signal(self, sender, signal, args):
         self.menuItem.set_enabled('gazu' in sys.modules)
 
-class PopulateMenuItem():
+class UpdateKitsuMenuItem():
     def __init__(self):
-        self.menuItem = flapiManager.conn.MenuItem.create('Populate Kitsu with shots', 'uk.ltd.filmlight.kitsu.populate')
+        self.menuItem = flapiManager.conn.MenuItem.create('Update Kitsu sequence', 'uk.ltd.filmlight.kitsu.update')
         kitsuCommandsMenu.menu.add_item(self.menuItem)
         self.menuItem.connect( "MenuItemSelected", self.handle_select_signal )
         # Disabled for now due to bug #61234
@@ -618,7 +618,7 @@ kitsuManager = KitsuManager()
 
 kitsuCommandsMenu = KitsuCommandsMenu()
 loginMenuItem = LoginMenuitem()
-populateMenuItem = PopulateMenuItem()
+updateMenuItem = UpdateKitsuMenuItem()
 aboutMenuItem = AboutMenuItem()
 
 '''
