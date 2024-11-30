@@ -449,15 +449,15 @@ class PopulateMenuItem():
                         )
                 )
 
-        self.settings = {
+        self.project_scene_dialog_settings = {
             "Project": "",
             "Sequence": ""
         }
 
         self.project_scene_dialog = flapiManager.conn.DynamicDialog.create( 
             "Test",
-            self.items,
-            self.settings
+            self.project_scene_dialog_items,
+            self.project_scene_dialog_settings
         )
 
         self.project_scene_dialog.connect("SettingsChanged", onSettingsChanged)
