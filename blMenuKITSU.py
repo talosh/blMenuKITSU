@@ -448,6 +448,15 @@ class PopulateMenuItem():
                         Default = sequence_keys[0]['Key']
                         )
                 )
+            else:
+                self.project_scene_dialog_items.append(
+                    flapi.DialogItem(
+                        Key=project['id'],
+                        Label='No sequences found',
+                        Type=flapi.DIT_STRING,
+                        Default = 'No sequences found'
+                        )
+                )
 
         self.project_scene_dialog_settings = {
             "Project": "",
