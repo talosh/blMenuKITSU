@@ -740,7 +740,8 @@ class UpdateKitsuMenuItem():
                     project_dict, 
                     kitsu_sequence, 
                     shot_name,
-                    data = shot_data
+                    data = shot_data,
+                    client = kitsuManager.kitsu_client
                     # data = {'00_shot_id': baselight_shot.get('shot_id')}
                 )
 
