@@ -189,6 +189,22 @@ class FLAPIManager():
 
         return baselight_shots
 
+    def get_kitsu_metadata_definition(self):
+        scene = self.app.get_current_scene()
+        md_names = {}
+        mddefns = scene.get_metadata_definitions()
+        
+        for mdfn in mddefns:
+            md_names[mdfn.Name] = mdfn
+
+        if 'kitsu-uid' in md_names.keys():
+            return md_names['kitsu-uid']
+        else:
+            scene.start_delta('Add kitsu-id metadata column')
+            metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
+            scene.end_delta()
+            scene.save_scene()
+            return metadata_obj
 
 class KitsuManager():
     # A class to manage Kitsu client calls
@@ -459,10 +475,11 @@ class UpdateKitsuMenuItem():
             return False
 
         baselight_shots = flapiManager.get_baselight_scene_shots()
+        kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(baselight_shots)}',
+            f'{pformat(kitsu_uid_metadata_obj)}',
             ["OK"]
         )
         return False
