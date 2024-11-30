@@ -700,6 +700,12 @@ class UpdateKitsuMenuItem():
                 return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
             return str(rectc_in)
 
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{platform.node()}',
+            ["OK"]
+        )
+        return False
 
         new_shots = []
         for shot_ix, baselight_shot in enumerate(baselight_shots):        
@@ -762,8 +768,8 @@ class UpdateKitsuMenuItem():
                 todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
                 comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
 
-                preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
-                urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
+                # preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
+                # urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
 
                 '''
                 preview_file = gazu.task.add_preview(
