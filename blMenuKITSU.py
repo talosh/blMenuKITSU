@@ -394,23 +394,14 @@ class PopulateMenuItem():
             )
             return False
 
-        kitsu_projects = kitsuManager.all_open_projects()
-        if not kitsu_projects:
+        self.kitsu_projects = kitsuManager.all_open_projects()
+        if not self.kitsu_projects:
             flapiManager.app.message_dialog( 
                 f'{settings.get("menu_group_name")}',
                 f'Kitsu has no open productions',
                 ["OK"]
             )
             return False
-
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{pformat(kitsuManager.get_sequences_tree())}',
-            ["OK"]
-        )
-
-        return False
-
 
         kitsu_project, kitsu_sequence, is_cancelled = self.ProjectSceneDialog()
 
@@ -423,45 +414,44 @@ class PopulateMenuItem():
             valid = 1
             newArgs = args
 
-            flapiManager.app.message_dialog(
-                f'{settings.get("menu_group_name")}: Args',
-                f'{args}',
-                ["OK"]
-            )
+            exclude = set([x['id'] for x in self.kitsu_projects])
+            self.exclude.remove(newArgs['Project'])
 
             return { 
                 "Valid"     : valid, 
                 "Settings"  : newArgs,
+                "Exclude"   : exclude
                 }
 
         seq_tree = kitsuManager.get_sequences_tree()
-
-
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{pformat(seq_tree)}',
-            ["OK"]
-        )
-
-        return None, None, True
-
-        gazu.shot.all_episodes_for_project
-
-        kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in kitsu_projects]
-
-
-        self.items = [
+        kitsu_project_keys = [{"Key": x['id'], "Text": x['name']} for x in seq_tree]
+        self.project_scene_dialog_items = [
             flapi.DialogItem(
                 Key='Project',
-                Label='Project',
-                Type=flapi.DIT_DROPDOWN,\
+                Label='Projects: ',
+                Type=flapi.DIT_DROPDOWN,
                 Options = kitsu_project_keys,
                 Default = kitsu_project_keys[0]['Key']
                 )
         ]
+        
+        for project in seq_tree.keys():
+            project_sequences = project.get('sequences')
+            if project_sequences:
+                sequence_keys = [{"Key": x['id'], "Text": x['name']} for x in project_sequences]
+                self.project_scene_dialog_items.append(
+                    flapi.DialogItem(
+                        Key=project['id'],
+                        Label='Sequence',
+                        Type=flapi.DIT_DROPDOWN,
+                        Options = sequence_keys,
+                        Default = sequence_keys[0]['Key']
+                        )
+                )
 
         self.settings = {
             "Project": "",
+            "Sequence": ""
         }
 
         self.project_scene_dialog = flapiManager.conn.DynamicDialog.create( 
