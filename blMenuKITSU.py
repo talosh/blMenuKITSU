@@ -638,19 +638,23 @@ class UpdateKitsuMenuItem():
         kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
         baselight_shots = flapiManager.get_baselight_scene_shots()
         kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
-
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{kitsu_uid_metadata_obj}',
-            ["OK"]
-        )
-        return False
-
         if kitsu_uid_metadata_obj is None:
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Unable to create new metadata for kitsu-uid.',
+                ["OK"]
+            )
             return False
 
         kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
         project_dict = gazu.project.get_project(kitsu_sequence.get('project_id'))
+
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{kitsu_shots}',
+            ["OK"]
+        )
+        return False
 
         kitsu_shot_uids = set()
         for kitsu_shot in kitsu_shots:
