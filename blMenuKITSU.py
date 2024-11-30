@@ -647,9 +647,15 @@ class UpdateKitsuMenuItem():
             return False
 
         projects = kitsuManager.all_open_projects()
+
+        for project in projects:
+            if project['id'] == kitsu_sequence['project_id']:
+                project_dict = project
+                break
+
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(projects)}',
+            f'{pformat(project_dict)}',
             ["OK"]
         )
         return False
