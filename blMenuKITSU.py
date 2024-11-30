@@ -757,6 +757,8 @@ class UpdateKitsuMenuItem():
                 todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
                 comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
 
+                '''
+
                 preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
                 urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
 
@@ -773,6 +775,7 @@ class UpdateKitsuMenuItem():
                     os.remove(preview_filename)
                 except:
                     pass
+                '''
 
                 new_md_values = {
                     kitsu_uid_metadata_obj.Key: new_shot.get('id')
