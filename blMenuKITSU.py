@@ -738,6 +738,14 @@ class UpdateKitsuMenuItem():
 
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
+        def on_update_cancelled():
+            if scene is not None:
+                scene.cancel_delta()
+                scene.set_transient_write_lock_deltas(False)
+                scene.release()
+
+        self.progressDialog.connect("CancelOperation", onSettingsChanged)
+
         try:
             progressDialog.show()
             progressDialog.set_progress(0, "")
