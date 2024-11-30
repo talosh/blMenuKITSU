@@ -757,10 +757,29 @@ class UpdateKitsuMenuItem():
                 todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
                 comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
 
+                preview_filename = os.path.join('/var/tmp', baselight_shot["shot_id"])
+                urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
 
+                preview_file = gazu.task.add_preview(
+                    task,
+                    comment,
+                    preview_filename,
+                    client = kitsuManager.kitsu_client
+                    )
 
+                gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
 
-                urllib.request.urlretrieve()
+                try:
+                    os.remove(preview_filename)
+                except:
+                    pass
+
+                new_md_values = {
+                    kitsu_uid_metadata_obj.Key: new_shot.get('id')
+                }
+
+                shot.set_metadata( new_md_values )
+                shot.release()
 
             scene.end_delta()
             scene.set_transient_write_lock_deltas(False)
