@@ -141,6 +141,51 @@ class FLAPIManager():
         except flapi.FLAPIException as ex:
             print( "Could not get Application instance: %s" % ex , flush=True)
 
+    def get_baselight_scene_shots(self):
+        scene = self.app.get_current_scene()
+        baselight_shots = []
+        nshots = scene.get_num_shots()
+        md_keys = set()
+        mddefns = scene.get_metadata_definitions()
+
+        for mdfn in mddefns:
+            md_keys.add(mdfn.Key)
+
+        if nshots > 0:
+            shots = scene.get_shot_ids(0, nshots)
+            for shot_ix, shot_inf in enumerate(shots):
+                print( "\r Querying Baselight metadata for shot %d of %s" % (shot_ix + 1, nshots), end="" )
+                # log.verbose("Shot %d:" % shot_ix)
+                shot = scene.get_shot(shot_inf.ShotId)
+                shot_md = shot.get_metadata(md_keys)
+                for key in md_keys:
+                    if type(shot_md[key]) is list:
+                        for list_ix, list_inf in enumerate(shot_md[key]):
+                            shot_md[key + '.' + str(list_ix)] = list_inf
+                        # print ('%15s: %s: %s:' % (key, type(shot_md[key]), shot_md[key]))
+                # shot_md = shot.get_metadata_strings(md_keys)
+                mark_ids = shot.get_mark_ids()
+                categories = shot.get_categories()
+
+                thumbnail_url = ''
+                thumbnail_url = flapi.ThumbnailManager.get_poster_uri(shot, 1, {'DCSpace': 'sRGB'})
+                pprint (thumbnail_url)
+
+                baselight_shots.append(
+                    {
+                        'shot_ix': shot_ix + 1,
+                        'shot_id': shot_inf.ShotId,
+                        'mddefns': mddefns,
+                        'shot_md': shot_md,
+                        'mark_ids': mark_ids,
+                        'categories': categories,
+                        'thumbnail_url': thumbnail_url
+                    }
+                )
+
+                shot.release()
+
+
 
 class KitsuManager():
     # A class to manage Kitsu client calls
@@ -405,15 +450,12 @@ class PopulateMenuItem():
 
         kitsu_project, kitsu_sequence, is_cancelled = self.ProjectSceneDialog()
 
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'p: {kitsu_project}, s: {kitsu_sequence}, c: {is_cancelled}',
-            ["OK"]
-        )
-        return False
-
         if is_cancelled:
             return False
+        elif kitsu_sequence == 'No sequences found':
+            return False
+
+        baselight_shots = flapiManager.get_baselight_scene_shots()
 
     def ProjectSceneDialog(self):
 
