@@ -622,17 +622,19 @@ class UpdateKitsuMenuItem():
 
         kitsu_project_id, kitsu_sequence_id, is_cancelled = self.ProjectSceneDialog()
 
+        if is_cancelled:
+            return False
+        elif kitsu_sequence_id is None:
+            return False
+        elif kitsu_sequence_id == 'No sequences found':
+            return False
+
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
             f'{pformat(kitsu_sequence_id)}',
             ["OK"]
         )
         return False
-
-        if is_cancelled:
-            return False
-        elif kitsu_sequence_id == 'No sequences found':
-            return False
 
         kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
         baselight_shots = flapiManager.get_baselight_scene_shots()
