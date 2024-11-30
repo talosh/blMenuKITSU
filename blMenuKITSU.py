@@ -425,7 +425,7 @@ class PopulateMenuItem():
 
         self.project_scene_dialog.connect("SettingsChanged", onSettingsChanged)
 
-        result =  self.dialog.show_modal(-200, -50)
+        result =  self.project_scene_dialog.show_modal(-200, -50)
 
         return None, None, True
 
