@@ -16,6 +16,150 @@ settings = {
     'version': 'v0.0.2.dev.002',
 }
 
+metadata_descriptors = [
+    {
+        "name": "00.Shot-ID",
+        "kitsu_key": "00_shot_id",
+        "bl_metadata_key": "event",
+        "padding": 4,
+        "entity_type": "Shot"
+    },
+    {
+        "name": "01.Locator",
+        "kitsu_key": "01_locator",
+        "bl_metadata_name": "01.Locator",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "02.Prod-Opt-Notes",
+        "kitsu_key": "02_prod_otp_notes",
+        "bl_metadata_name": "02.Prod-Opt-Notes",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "03.Conform-Notes",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "04.Opt-Done",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "05.Has Speed Change",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "06.DL-Time-Est",
+        "kitsu_key": "06_dl_time_est",
+        "bl_metadata_name": "06.DL-Time-Est",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "07.DL-Needs-Prod-Atn",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "08.DL-Producer-Notes",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "09.EDL-event",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "10.Tape",
+        "kitsu_key": "10_tape",
+        "bl_metadata_key": "tape",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "11.Source TC Start",
+        "kitsu_key": "11_source_tc_start",
+        "bl_metadata_key": "srctc.0",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "12.Source TC End",
+        "kitsu_key": "12_source_tc_end",
+        "bl_metadata_key": "srctc.1",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "13.Record TC Start",
+        "kitsu_key": "13_record_tc_start",
+        "bl_metadata_key": "rectc.0",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "14.Record TC End",
+        "kitsu_key": "14_record_tc_end",
+        "bl_metadata_key": "rectc.1",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "15.Vers-in-Baselight",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "16.Vers-Prod-Final",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "17.Vendor",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "18.DL-Import-Date",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "19.EDL-Comment",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "21.Turnover-Package",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "22.Prod TC In",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "23.Prod TC Out",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "25.Rec-Frame",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "26.BL-Shot-Filename",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "27.VFX-Latest-Pub",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "28.DL-VFX-cost-est",
+        "kitsu_key": "28_dl_vfx_cost_est",
+        "bl_metadata_name": "28.DL-VFX-cost-est",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "29.DL-VFX-hours-est",
+        "kitsu_key": "29_dl_vfx_hours_est",
+        "bl_metadata_name": "29.DL-VFX-hours-est",
+        "entity_type": "Shot"
+    },
+    {
+        "name": "30.DL-VFX-ID",
+        "kitsu_key": "30_dl_vfx_id",
+        "bl_metadata_name": "vfx-id",
+        "entity_type": "Shot"
+    }
+]
+
 packages_folder = os.path.join(
     os.path.dirname(inspect.getfile(lambda: None)),
     f'{settings["app_name"]}.packages'
@@ -486,9 +630,78 @@ class UpdateKitsuMenuItem():
         baselight_shots = flapiManager.get_baselight_scene_shots()
         kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
 
+        if kitsu_uid_metadata_obj is None:
+            return False
+
+        kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence)
+        project_dict = gazu.project.get_project(kitsu_sequence.get('project_id'))
+
+        kitsu_shot_uids = set()
+        for kitsu_shot in kitsu_shots:
+            kitsu_shot_uids.add(kitsu_shot.get('id'))
+
+        def build_kitsu_shot_data(baselight_shot):
+            data = {}
+            md_descriptors = metadata_descriptors
+            md_descriptors_by_bl_key = {}
+            for md_desc in md_descriptors:
+                bl_key = md_desc.get('bl_metadata_key')
+                if not bl_key:
+                    bl_name = md_desc.get('bl_metadata_name')
+                    if not bl_name:
+                        continue
+                    else:
+                        mddefns = baselight_shot.get('mddefns')
+                        for md_def in mddefns:
+                            name = md_def.Name
+                            if name == bl_name:
+                                bl_key = md_def.Key
+                                md_descriptors_by_bl_key[bl_key] = md_desc
+                        continue
+                md_descriptors_by_bl_key[bl_key] = md_desc
+            shot_md = baselight_shot.get('shot_md')
+            for bl_key in md_descriptors_by_bl_key.keys():
+                kitsu_key = md_descriptors_by_bl_key[bl_key].get('kitsu_key')
+                value = str(shot_md.get(bl_key))
+                if 'padding' in md_descriptors_by_bl_key[bl_key].keys():
+                    padding = md_descriptors_by_bl_key[bl_key].get('padding', 0)
+                    value = value.zfill(padding)
+                data[kitsu_key] = value
+            return data
+
+        new_shots = []
+        for shot_ix, baselight_shot in enumerate(baselight_shots):        
+            shot_md = baselight_shot.get('shot_md')
+            if not shot_md:
+                continue
+            bl_kitsu_uid = shot_md.get(kitsu_uid_metadata_obj.Key)
+            if bl_kitsu_uid in kitsu_shot_uids:
+                new_data = {}
+                bl_shot_data = build_kitsu_shot_data(baselight_shot)
+                kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid)
+                kitsu_shot_data = kitsu_shot.get('data', dict())
+                for data_key in bl_shot_data.keys():
+                    if kitsu_shot_data.get(data_key):
+                        continue
+                    else:
+                        if bl_shot_data.get(data_key):
+                            new_data[data_key] = bl_shot_data.get(data_key)
+
+                if not new_data:
+                    continue
+                
+                for new_data_key in new_data.keys():
+                    kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
+                kitsu_shot['data'] = kitsu_shot_data
+                gazu.shot.update_shot(kitsu_shot)
+                continue
+        else:
+            new_shots.append(baselight_shot)
+
+
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(kitsu_uid_metadata_obj)}',
+            f'{pformat(new_shots)}',
             ["OK"]
         )
         return False
