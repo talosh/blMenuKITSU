@@ -626,7 +626,7 @@ class UpdateKitsuMenuItem():
             return False
         elif kitsu_sequence_id is None:
             return False
-        elif kitsu_sequence_id == 'No sequences found':
+        elif kitsu_sequence_id.startswith('No'):
             return False
 
         flapiManager.app.message_dialog( 
