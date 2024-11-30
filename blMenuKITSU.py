@@ -479,6 +479,16 @@ class PopulateMenuItem():
         self.project_scene_dialog.connect("SettingsChanged", onSettingsChanged)
 
         result =  self.project_scene_dialog.show_modal(-200, -50)
+
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{result}',
+            ["OK"]
+        )
+        return None, None, True
+
+
+
         if not result:
             return None, None, True
         else:
