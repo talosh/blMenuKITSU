@@ -228,7 +228,7 @@ class KitsuManager():
         seq_tee = {}
         projects = gazu.project.all_open_projects(client = self.kitsu_client)
         for project in projects:
-            project['episodes'] = 
+            project['episodes'] = None
 
 
 
