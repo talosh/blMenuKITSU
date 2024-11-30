@@ -456,6 +456,7 @@ class PopulateMenuItem():
             return False
 
         baselight_shots = flapiManager.get_baselight_scene_shots()
+        pprint (baselight_shots)
 
     def ProjectSceneDialog(self):
 
