@@ -646,7 +646,7 @@ class UpdateKitsuMenuItem():
             )
             return False
 
-        project_dict = gazu.project.get_project(kitsu_sequence.get('project_id'))
+        project_dict = gazu.entity.get_entity(kitsu_sequence.get('project_id'))
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
             f'{project_dict}',
