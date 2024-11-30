@@ -627,6 +627,11 @@ class UpdateKitsuMenuItem():
         elif kitsu_sequence_id is None:
             return False
         elif kitsu_sequence_id.startswith('No'):
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Please create sequence in Kitsu first',
+                ["OK"]
+            )
             return False
 
         flapiManager.app.message_dialog( 
