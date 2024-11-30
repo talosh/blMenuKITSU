@@ -403,6 +403,12 @@ class PopulateMenuItem():
         kitsu_projects = kitsuManager.all_open_projects()
         kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in kitsu_projects]
 
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{kitsu_projects}',
+            ["OK"]
+        )
+
         self.items = [
             flapi.DialogItem(
                 Key='Project',
