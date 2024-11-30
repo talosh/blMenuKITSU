@@ -141,6 +141,8 @@ class FLAPIManager():
         except flapi.FLAPIException as ex:
             print( "Could not get Application instance: %s" % ex , flush=True)
 
+        self.tm = flapi.ThumbnailManager(self.conn, None)
+
     def get_baselight_scene_shots(self):
         scene = self.app.get_current_scene()
         baselight_shots = []
@@ -168,7 +170,7 @@ class FLAPIManager():
                 categories = shot.get_categories()
 
                 thumbnail_url = ''
-                thumbnail_url = self.conn.ThumbnailManager.get_poster_uri(shot, 1, {'DCSpace': 'sRGB'})
+                thumbnail_url = self.tm.get_poster_uri(shot, 1, {'DCSpace': 'sRGB'})
                 pprint (thumbnail_url)
 
                 baselight_shots.append(
