@@ -205,10 +205,14 @@ class FLAPIManager():
                     f'Unable to add Kitsu UID metadata column - scene is read-only',
                     ["OK"]
                 )
-            scene.start_delta('Add kitsu-id metadata column')
-            metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
-            scene.end_delta()
-            scene.save_scene()
+            metadata_obj = None
+            try:
+                scene.start_delta('Add kitsu-id metadata column')
+                metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
+                scene.end_delta()
+                scene.save_scene()
+            except:
+                pass
             return metadata_obj
 
 class KitsuManager():
