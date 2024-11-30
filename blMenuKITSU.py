@@ -688,6 +688,17 @@ class UpdateKitsuMenuItem():
                 data[kitsu_key] = value
             return data
 
+        def create_kitsu_shot_name(baselight_shot):
+            import uuid
+            shot_md = baselight_shot.get('shot_md')
+            if not shot_md:
+                return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
+            rectc_in = shot_md.get('rectc.0')
+            if not rectc_in:
+                return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
+            return str(rectc_in)
+
+
         new_shots = []
         for shot_ix, baselight_shot in enumerate(baselight_shots):        
             shot_md = baselight_shot.get('shot_md')
@@ -717,14 +728,38 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{pformat(new_shots)}',
-            ["OK"]
-        )
-        return False
+        try:
+            scene.set_transient_write_lock_deltas(True)
+            scene.start_delta('Add kitsu metadata to shots')
 
-        pprint (baselight_shots)
+            for baselight_shot in new_shots:
+                shot_name = create_kitsu_shot_name(baselight_shot)
+                shot_data = build_kitsu_shot_data(baselight_shot)
+
+                new_shot = gazu.shot.new_shot(
+                    project_dict, 
+                    kitsu_sequence, 
+                    shot_name,
+                    data = shot_data
+                    # data = {'00_shot_id': baselight_shot.get('shot_id')}
+                )
+
+            scene.end_delta()
+            scene.set_transient_write_lock_deltas(False)
+            scene.release()
+
+        except Exception as e:
+            if scene is not None:
+                scene.cancel_delta()
+                scene.set_transient_write_lock_deltas(False)
+                scene.release()
+
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Error: {pformat(e)}',
+                ["OK"]
+            )
+            return False
 
     def ProjectSceneDialog(self):
 
