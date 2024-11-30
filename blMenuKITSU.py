@@ -676,6 +676,7 @@ class UpdateKitsuMenuItem():
             if not shot_md:
                 continue
             bl_kitsu_uid = shot_md.get(kitsu_uid_metadata_obj.Key)
+            '''
             if bl_kitsu_uid in kitsu_shot_uids:
                 new_data = {}
                 bl_shot_data = build_kitsu_shot_data(baselight_shot)
@@ -696,8 +697,9 @@ class UpdateKitsuMenuItem():
                 kitsu_shot['data'] = kitsu_shot_data
                 gazu.shot.update_shot(kitsu_shot)
                 continue
-        else:
-            new_shots.append(baselight_shot)
+            else:
+                new_shots.append(baselight_shot)
+            '''
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
