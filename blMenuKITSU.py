@@ -641,6 +641,13 @@ class UpdateKitsuMenuItem():
         for kitsu_shot in kitsu_shots:
             kitsu_shot_uids.add(kitsu_shot.get('id'))
 
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{pformat(kitsu_shot_uids)}',
+            ["OK"]
+        )
+        return False
+
         def build_kitsu_shot_data(baselight_shot):
             data = {}
             md_descriptors = metadata_descriptors
