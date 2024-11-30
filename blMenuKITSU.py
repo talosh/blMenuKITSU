@@ -378,15 +378,30 @@ class PopulateMenuItem():
             )
             return False
 
-        projects = kitsuManager.all_open_projects()
+        kitsu_project, kitsu_sequence, is_cancelled = self.ProjectSceneDialog()
 
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{projects}',
-            ["OK"]
-        )
+        if is_cancelled:
+            return False
 
-        kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in projects]
+    def ProjectSceneDialog(self):
+
+        def onSettingsChanged(sender, signal, args):
+            valid = 1
+            newArgs = args
+
+            flapiManager.app.message_dialog(
+                f'{settings.get("menu_group_name")}: Args',
+                f'{args}',
+                ["OK"]
+            )
+
+            return { 
+                "Valid"     : valid, 
+                "Settings"  : newArgs,
+                }
+
+        kitsu_projects = kitsuManager.all_open_projects()
+        kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in kitsu_projects]
 
         self.items = [
             flapi.DialogItem(
@@ -402,13 +417,19 @@ class PopulateMenuItem():
             "Project": "",
         }
 
-        self.dialog = flapiManager.conn.DynamicDialog.create( 
+        self.project_scene_dialog = flapiManager.conn.DynamicDialog.create( 
             "Test",
             self.items,
             self.settings
         )
 
+        self.project_scene_dialog.connect("SettingsChanged", onSettingsChanged)
+
         result =  self.dialog.show_modal(-200, -50)
+
+        return None, None, True
+
+        '''
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
@@ -416,6 +437,7 @@ class PopulateMenuItem():
             ["OK"]
         )
         return False
+        '''
 
 
 
