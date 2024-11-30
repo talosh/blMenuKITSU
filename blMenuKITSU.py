@@ -700,12 +700,14 @@ class UpdateKitsuMenuItem():
                 return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
             return str(rectc_in)
 
+        '''
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
             f'{platform.node()}',
             ["OK"]
         )
         return False
+        '''
 
         new_shots = []
         for shot_ix, baselight_shot in enumerate(baselight_shots):        
@@ -739,12 +741,13 @@ class UpdateKitsuMenuItem():
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
         def on_update_cancelled():
+            progressDialog.hide()
             if scene is not None:
                 scene.cancel_delta()
                 scene.set_transient_write_lock_deltas(False)
                 scene.release()
 
-        self.progressDialog.connect("CancelOperation", onSettingsChanged)
+        self.progressDialog.connect("CancelOperation", on_update_cancelled)
 
         try:
             progressDialog.show()
