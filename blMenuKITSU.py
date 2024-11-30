@@ -747,7 +747,7 @@ class UpdateKitsuMenuItem():
                 scene.set_transient_write_lock_deltas(False)
                 scene.release()
 
-        self.progressDialog.connect("CancelOperation", on_update_cancelled)
+        progressDialog.connect("CancelOperation", on_update_cancelled)
 
         try:
             progressDialog.show()
