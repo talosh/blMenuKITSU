@@ -462,7 +462,7 @@ class PopulateMenuItem():
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{baselight_shots}',
+            f'{pformat(baselight_shots)}',
             ["OK"]
         )
         return False
