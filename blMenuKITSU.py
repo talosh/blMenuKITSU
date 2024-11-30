@@ -343,20 +343,18 @@ class FLAPIManager():
         if 'kitsu-uid' in md_names.keys():
             return md_names['kitsu-uid']
         else:
-            if scene.is_read_only():
-                self.app.message_dialog( 
-                    f'{settings.get("menu_group_name")}',
-                    f'Unable to add Kitsu UID metadata column - scene is read-only.\nPlease add "kitsu-uid" metadata column manually',
-                    ["OK"]
-                )
             metadata_obj = None
             try:
+                scene.set_transient_write_lock_deltas(True)
                 scene.start_delta('Add kitsu-id metadata column')
                 metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
                 scene.end_delta()
                 scene.save_scene()
             except:
-                pass
+                if scene is not None:
+                    scene.cancel_delta()
+                    scene.set_transient_write_lock_deltas(False)
+                    scene.release()
             return metadata_obj
 
 
@@ -493,6 +491,7 @@ class KitsuCommandsMenu:
         self.menuItem.register(flapi.MENULOCATION_SCENE_MENU)
         self.menuItem.set_sub_menu(self.menu)
 
+
 class LoginMenuitem():
     def __init__(self):
         self.menuItem = flapiManager.conn.MenuItem.create('Login to Kitsu', 'uk.ltd.filmlight.kitsu.login')
@@ -577,6 +576,7 @@ class LoginMenuitem():
     def handle_update_signal(self, sender, signal, args):
         self.menuItem.set_enabled('gazu' in sys.modules)
 
+
 class UpdateKitsuMenuItem():
     def __init__(self):
         self.menuItem = flapiManager.conn.MenuItem.create('Update Kitsu sequence', 'uk.ltd.filmlight.kitsu.update')
@@ -637,15 +637,14 @@ class UpdateKitsuMenuItem():
 
         kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
         baselight_shots = flapiManager.get_baselight_scene_shots()
+        kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(baselight_shots)}',
+            f'{kitsu_uid_metadata_obj}',
             ["OK"]
         )
         return False
-
-        kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
 
         if kitsu_uid_metadata_obj is None:
             return False
