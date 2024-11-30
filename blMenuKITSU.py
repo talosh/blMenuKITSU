@@ -435,7 +435,7 @@ class PopulateMenuItem():
                 )
         ]
         
-        for project in seq_tree.keys():
+        for project in seq_tree:
             project_sequences = project.get('sequences')
             if project_sequences:
                 sequence_keys = [{"Key": x['id'], "Text": x['name']} for x in project_sequences]
