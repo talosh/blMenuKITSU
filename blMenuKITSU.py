@@ -4,6 +4,7 @@ import inspect
 import platform
 
 from urllib.parse import urljoin, urlparse
+import urllib.request
 
 import flapi
 
@@ -728,6 +729,16 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
+        task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
+
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{pformat(task_types)}',
+            ["OK"]
+        )
+
+
+        '''
         try:
             scene.set_transient_write_lock_deltas(True)
             scene.start_delta('Add kitsu metadata to shots')
@@ -745,6 +756,10 @@ class UpdateKitsuMenuItem():
                     # data = {'00_shot_id': baselight_shot.get('shot_id')}
                 )
 
+                shot_id = baselight_shot.get('shot_id')
+                shot = scene.get_shot(shot_id)
+                urllib.request.urlretrieve()
+
             scene.end_delta()
             scene.set_transient_write_lock_deltas(False)
             scene.release()
@@ -761,6 +776,7 @@ class UpdateKitsuMenuItem():
                 ["OK"]
             )
             return False
+        '''
 
     def ProjectSceneDialog(self):
 
