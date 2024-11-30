@@ -622,6 +622,13 @@ class UpdateKitsuMenuItem():
 
         kitsu_project_id, kitsu_sequence_id, is_cancelled = self.ProjectSceneDialog()
 
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{pformat(kitsu_sequence_id)}',
+            ["OK"]
+        )
+        return False
+
         if is_cancelled:
             return False
         elif kitsu_sequence_id == 'No sequences found':
