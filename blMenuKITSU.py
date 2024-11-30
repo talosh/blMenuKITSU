@@ -638,7 +638,7 @@ class UpdateKitsuMenuItem():
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(kitsu_sequence_id)}',
+            f'{pformat(kitsu_sequence)}',
             ["OK"]
         )
         return False
