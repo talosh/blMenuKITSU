@@ -646,15 +646,16 @@ class UpdateKitsuMenuItem():
             )
             return False
 
-        kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
         project_dict = gazu.project.get_project(kitsu_sequence.get('project_id'))
-
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{kitsu_shots}',
+            f'{project_dict}',
             ["OK"]
         )
         return False
+
+        kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
+
 
         kitsu_shot_uids = set()
         for kitsu_shot in kitsu_shots:
