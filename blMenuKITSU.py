@@ -224,6 +224,10 @@ class KitsuManager():
     def all_open_projects(self):
         return gazu.project.all_open_projects(client = self.kitsu_client)
 
+    def get_sequences_tree(self):
+
+
+
     '''
     def login(self, host, user, password):
         try:
@@ -401,13 +405,18 @@ class PopulateMenuItem():
                 }
 
         kitsu_projects = kitsuManager.all_open_projects()
-        kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in kitsu_projects]
+
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
             f'{pformat(kitsu_projects)}',
             ["OK"]
         )
+
+        gazu.shot.all_episodes_for_project
+
+        kitsu_project_keys =  [{"Key": x['id'], "Text": x['name']} for x in kitsu_projects]
+
 
         self.items = [
             flapi.DialogItem(
