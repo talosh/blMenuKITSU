@@ -171,7 +171,7 @@ class FLAPIManager():
 
                 thumbnail_url = ''
                 thumbnail_url = self.conn.ThumbnailManager.get_poster_uri(shot, {'DCSpace': 'sRGB'})
-                pprint (thumbnail_url)
+                # pprint (thumbnail_url)
 
                 baselight_shots.append(
                     {
@@ -458,6 +458,14 @@ class PopulateMenuItem():
             return False
 
         baselight_shots = flapiManager.get_baselight_scene_shots()
+
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{baselight_shots}',
+            ["OK"]
+        )
+        return False
+
         pprint (baselight_shots)
 
     def ProjectSceneDialog(self):
