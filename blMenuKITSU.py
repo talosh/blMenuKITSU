@@ -730,7 +730,12 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
+        progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
+
         try:
+            progressDialog.show()
+            progressDialog.set_progress(0, "")
+
             scene.set_transient_write_lock_deltas(True)
             scene.start_delta('Add kitsu metadata to shots')
 
@@ -788,7 +793,13 @@ class UpdateKitsuMenuItem():
             scene.set_transient_write_lock_deltas(False)
             scene.release()
 
+            progressDialog.set_progress(1, "")
+            progressDialog.hide()
+
         except Exception as e:
+            progressDialog.hide()
+            print("Problem adding kitsu metadata to shots: %s" % e, flush=True)
+
             if scene is not None:
                 scene.cancel_delta()
                 scene.set_transient_write_lock_deltas(False)
