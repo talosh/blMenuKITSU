@@ -225,12 +225,14 @@ class KitsuManager():
         return gazu.project.all_open_projects(client = self.kitsu_client)
 
     def get_sequences_tree(self):
-        seq_tree = {}
         projects = gazu.project.all_open_projects(client = self.kitsu_client)
         for project in projects:
-            seq_tree[project['name']] = project
-            seq_tree[project['name']]['episodes'] = gazu.shot.all_episodes_for_project(project, client = self.kitsu_client)
-        return seq_tree
+            project_episodes = gazu.shot.all_episodes_for_project(project, client=self.kitsu_client)
+            for episode in project_episodes:
+                ep_sequences = gazu.shot.all_sequences_for_episode(episode, client=self.kitsu_client)
+                episode['sequences'] = ep_sequences
+            project['episodes'] = project_episodes         
+        return projects
 
     '''
     def login(self, host, user, password):
