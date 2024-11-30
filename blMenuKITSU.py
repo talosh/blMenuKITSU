@@ -228,11 +228,15 @@ class KitsuManager():
         projects = gazu.project.all_open_projects(client = self.kitsu_client)
         for project in projects:
             project_episodes = gazu.shot.all_episodes_for_project(project, client=self.kitsu_client)
-            for episode in project_episodes:
-                ep_sequences = gazu.shot.all_sequences_for_episode(episode, client=self.kitsu_client)
-                episode['sequences'] = ep_sequences
-            project['episodes'] = project_episodes
             project_sequences = gazu.shot.all_sequences_for_project(project, client=self.kitsu_client)
+            if project_episodes:
+                for episode in project_episodes:
+                    episode['sequences'] = []
+                    ep_sequences = gazu.shot.all_sequences_for_episode(episode, client=self.kitsu_client)
+                    for ep_seq in ep_sequences:
+                        if ep_seq in project_sequences:
+                            episode['sequences'].append(ep_seq)
+            project['episodes'] = project_episodes
             project['sequences'] = project_sequences
         return projects
 
