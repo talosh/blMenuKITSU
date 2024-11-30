@@ -359,6 +359,7 @@ class FLAPIManager():
                 pass
             return metadata_obj
 
+
 class KitsuManager():
     # A class to manage Kitsu client calls
 
