@@ -170,7 +170,7 @@ class FLAPIManager():
                 categories = shot.get_categories()
 
                 thumbnail_url = ''
-                thumbnail_url = self.tm.get_poster_uri(shot, 1, {'DCSpace': 'sRGB'})
+                thumbnail_url = self.tm.get_poster_uri(shot, {'DCSpace': 'sRGB'})
                 pprint (thumbnail_url)
 
                 baselight_shots.append(
