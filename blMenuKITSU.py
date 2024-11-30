@@ -225,6 +225,10 @@ class KitsuManager():
         return gazu.project.all_open_projects(client = self.kitsu_client)
 
     def get_sequences_tree(self):
+        seq_tee = {}
+        projects = gazu.project.all_open_projects(client = self.kitsu_client)
+        for project in projects:
+            project['episodes'] = 
 
 
 
@@ -382,6 +386,24 @@ class PopulateMenuItem():
             )
             return False
 
+        kitsu_projects = kitsuManager.all_open_projects()
+        if not kitsu_projects:
+            flapiManager.app.message_dialog( 
+                f'{settings.get("menu_group_name")}',
+                f'Kitsu has no open productions',
+                ["OK"]
+            )
+            return False
+
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{pformat(kitsu_projects)}',
+            ["OK"]
+        )
+
+        return False
+
+
         kitsu_project, kitsu_sequence, is_cancelled = self.ProjectSceneDialog()
 
         if is_cancelled:
@@ -404,14 +426,16 @@ class PopulateMenuItem():
                 "Settings"  : newArgs,
                 }
 
-        kitsu_projects = kitsuManager.all_open_projects()
+        seq_tree = kitsuManager.get_sequences_tree()
 
 
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(kitsu_projects)}',
+            f'{pformat(seq_tree)}',
             ["OK"]
         )
+
+        return None, None, True
 
         gazu.shot.all_episodes_for_project
 
