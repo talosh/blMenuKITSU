@@ -207,16 +207,10 @@ class FLAPIManager():
                 )
             metadata_obj = None
             try:
-                scene_path = scene.get_scene_pathname()
-                scene.close_scene()
-                scene.release()
-                scene = self.conn.Scene.open_scene( scene_path )
                 scene.start_delta('Add kitsu-id metadata column')
                 metadata_obj = scene.add_metadata_defn('kitsu-uid', 'String')
                 scene.end_delta()
                 scene.save_scene()
-                scene.close_scene()
-                scene.release()
             except:
                 pass
             return metadata_obj
