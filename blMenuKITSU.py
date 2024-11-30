@@ -405,6 +405,13 @@ class PopulateMenuItem():
 
         kitsu_project, kitsu_sequence, is_cancelled = self.ProjectSceneDialog()
 
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'p: {kitsu_project}, s: {kitsu_sequence}, c: {is_cancelled}',
+            ["OK"]
+        )
+        return False
+
         if is_cancelled:
             return False
 
@@ -472,8 +479,10 @@ class PopulateMenuItem():
         self.project_scene_dialog.connect("SettingsChanged", onSettingsChanged)
 
         result =  self.project_scene_dialog.show_modal(-200, -50)
-
-        return None, None, True
+        if not result:
+            return None, None, True
+        else:
+            return result['Project'], result['Sequence'], False
 
         '''
 
