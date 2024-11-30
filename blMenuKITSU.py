@@ -187,6 +187,7 @@ class FLAPIManager():
 
                 shot.release()
 
+        return baselight_shots
 
 
 class KitsuManager():
