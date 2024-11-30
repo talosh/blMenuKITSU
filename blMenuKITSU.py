@@ -231,7 +231,9 @@ class KitsuManager():
             for episode in project_episodes:
                 ep_sequences = gazu.shot.all_sequences_for_episode(episode, client=self.kitsu_client)
                 episode['sequences'] = ep_sequences
-            project['episodes'] = project_episodes         
+            project['episodes'] = project_episodes
+            project_sequences = gazu.shot.all_sequences_for_project(project, client=self.kitsu_client)
+            project['sequences'] = project_sequences
         return projects
 
     '''
