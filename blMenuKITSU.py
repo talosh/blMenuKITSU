@@ -202,7 +202,7 @@ class FLAPIManager():
             if scene.is_read_only():
                 self.app.message_dialog( 
                     f'{settings.get("menu_group_name")}',
-                    f'Unable to add Kitsu UID metadata column - scene is read-only',
+                    f'Unable to add Kitsu UID metadata column - scene is read-only.\nPlease add "kitsu-uid" metadata column manually',
                     ["OK"]
                 )
             metadata_obj = None
