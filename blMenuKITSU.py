@@ -2,6 +2,7 @@ import os
 import sys
 import inspect
 import platform
+import socket
 
 from urllib.parse import urljoin, urlparse
 import urllib.request
@@ -326,7 +327,7 @@ class FLAPIManager():
                         'shot_md': shot_md,
                         'mark_ids': mark_ids,
                         'categories': categories,
-                        'thumbnail_url': thumbnail_url
+                        'thumbnail_url': f"http://{socket.gethostname()}:{1985}{thumbnail_url}"
                     }
                 )
                 shot.release()
@@ -729,16 +730,6 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
-        task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
-
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{pformat(task_types)}',
-            ["OK"]
-        )
-
-
-        '''
         try:
             scene.set_transient_write_lock_deltas(True)
             scene.start_delta('Add kitsu metadata to shots')
@@ -758,6 +749,17 @@ class UpdateKitsuMenuItem():
 
                 shot_id = baselight_shot.get('shot_id')
                 shot = scene.get_shot(shot_id)
+
+                task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
+                shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
+                shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
+                task = gazu.task.new_task(new_shot, shot_task_types[0], client = kitsuManager.kitsu_client)
+                todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
+                comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
+
+
+
+
                 urllib.request.urlretrieve()
 
             scene.end_delta()
@@ -776,7 +778,7 @@ class UpdateKitsuMenuItem():
                 ["OK"]
             )
             return False
-        '''
+
 
     def ProjectSceneDialog(self):
 
