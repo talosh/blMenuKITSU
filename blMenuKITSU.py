@@ -4,7 +4,7 @@ import inspect
 import platform
 import socket
 import subprocess
-import tempfile
+import multiprocessing
 
 from urllib.parse import urljoin, urlparse
 import urllib.request
@@ -741,6 +741,15 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
+        def run_command(command):
+            result = subprocess.run(
+                command,
+                shell=True,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
         def on_update_cancelled():
@@ -786,9 +795,11 @@ class UpdateKitsuMenuItem():
                 url = str(baselight_shot['thumbnail_url'])
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
-                command = f"wget {escaped_url} -o {escaped_destination}"
-                print (command, flush=True)
-                os.system(command)
+                command = f"curl -L {escaped_url} -o {escaped_destination}"
+
+                process = multiprocessing.Process(target=run_command, args=(command,))
+                process.start()
+                process.join()
 
                 '''
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.bashrc', mode='w')
