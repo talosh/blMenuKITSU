@@ -786,7 +786,7 @@ class UpdateKitsuMenuItem():
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
                 curl_command = f"curl -L {escaped_url} -o {escaped_destination}"
-
+                os.system(curl_command)
 
                 '''
                 preview_file = gazu.task.add_preview(
