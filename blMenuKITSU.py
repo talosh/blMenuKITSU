@@ -787,14 +787,6 @@ class UpdateKitsuMenuItem():
                 escaped_destination = f"\"{preview_filename}\""
                 curl_command = f"curl -L {escaped_url} -o {escaped_destination}"
 
-                result = subprocess.run(
-                    curl_command,
-                    shell=True,
-                    check=True,
-                    capture_output=True,
-                    text=True
-                )
-
 
                 '''
                 preview_file = gazu.task.add_preview(
@@ -810,11 +802,11 @@ class UpdateKitsuMenuItem():
                     os.remove(preview_filename)
                 except:
                     pass
+                '''
 
                 new_md_values = {
                     kitsu_uid_metadata_obj.Key: new_shot.get('id')
                 }
-                '''
 
                 shot.set_metadata( new_md_values )
                 shot.release()
