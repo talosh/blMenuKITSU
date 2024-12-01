@@ -778,7 +778,11 @@ class UpdateKitsuMenuItem():
 
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
+        progressDialog_cancelled = False
+
         def on_update_cancelled():
+            global progressDialog_cancelled
+            progressDialog_cancelled = True
             progressDialog.hide()
             if scene is not None:
                 scene.cancel_delta()
@@ -795,6 +799,10 @@ class UpdateKitsuMenuItem():
             scene.start_delta('Add kitsu metadata to shots')
 
             for idx, baselight_shot in enumerate(new_shots):
+
+                if progressDialog_cancelled:
+                    break
+
                 shot_name = create_kitsu_shot_name(baselight_shot)
                 shot_data = build_kitsu_shot_data(baselight_shot)
 
@@ -831,22 +839,6 @@ class UpdateKitsuMenuItem():
                     }
                 )
 
-                # preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
-                # escaped_url = f"\"{url}\""
-                # escaped_destination = f"\"{preview_filename}\""
-                # command = f"curl -L {escaped_url} -o {escaped_destination}"
-
-                # '''
-                # '''
-                
-                '''
-                try:
-                    os.remove(preview_filename)
-                except:
-                    pass
-                '''
-
-
                 progressDialog.set_progress(idx / len(new_shots), "")
 
             scene.end_delta()
@@ -872,7 +864,19 @@ class UpdateKitsuMenuItem():
             )
             return False
         
-        for preview_dict in preview_items:
+        if progressDialog_cancelled:
+            return False
+        
+        progressDialog.set_title('Uploading previews to Kitsu')
+        progressDialog.set_progress(0, '')
+        progressDialog.show()
+
+        for idx, preview_dict in enumerate(preview_items):
+            if progressDialog_cancelled:
+                break
+            
+            progressDialog.set_progress(idx / len(preview_items), f'Uploading {idx + 1} of {len(preview_items)}')
+
             preview_file = gazu.task.add_preview(
                 preview_dict['task'],
                 preview_dict['comment'],
@@ -881,6 +885,10 @@ class UpdateKitsuMenuItem():
                 )
             gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
 
+        progressDialog.set_progress(1, "")
+        progressDialog.hide()
+
+        return True
 
 
     def ProjectSceneDialog(self):
