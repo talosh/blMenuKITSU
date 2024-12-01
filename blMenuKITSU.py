@@ -4,7 +4,6 @@ import inspect
 import platform
 import socket
 import subprocess
-import tkinter as tk
 
 from urllib.parse import urljoin, urlparse
 import urllib.request
@@ -795,16 +794,6 @@ class UpdateKitsuMenuItem():
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
                 command = f"curl -L {escaped_url} -o {escaped_destination}"
-
-                copy_to_clipboard(command)
-
-                flapiManager.app.message_dialog( 
-                    f'{settings.get("menu_group_name")}',
-                    f'Please paste command from clipboard into terminal',
-                    ["OK"]
-                )
-
-
 
                 '''
                 preview_file = gazu.task.add_preview(
