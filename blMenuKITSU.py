@@ -331,7 +331,7 @@ class FLAPIManager():
                         'shot_md': shot_md,
                         'mark_ids': mark_ids,
                         'categories': categories,
-                        'thumbnail_url': f"http://localhost:1985{thumbnail_url}"
+                        'thumbnail_url': f"http://{socket.gethostname()}:1985{thumbnail_url}"
                     }
                 )
                 shot.release()
