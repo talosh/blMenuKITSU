@@ -786,8 +786,10 @@ class UpdateKitsuMenuItem():
                 url = str(baselight_shot['thumbnail_url'])
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
-                curl_command = f"curl -L {escaped_url} -o {escaped_destination}"
+                curl_command = f"curl -L {escaped_url} -o {escaped_destination} -m 1"
+                os.system(curl_command)
 
+                '''
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.bashrc', mode='w')
                 temp_file_name = temp_file.name
                 temp_file.write(f"{curl_command}\n")
@@ -799,6 +801,7 @@ class UpdateKitsuMenuItem():
                     capture_output=True,
                     text=True
                 )
+                '''
 
                 '''
                 preview_file = gazu.task.add_preview(
