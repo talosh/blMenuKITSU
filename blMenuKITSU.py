@@ -776,7 +776,7 @@ class UpdateKitsuMenuItem():
 
         preview_items = []
 
-        progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
+        progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots", "", True)
 
         progressDialog_cancelled = False
 
