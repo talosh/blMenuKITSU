@@ -668,7 +668,6 @@ class UpdateKitsuMenuItem():
         )
         return False
 
-
         '''
         descriptors_api_path = '/data/projects/' + project_dict['id'] + '/metadata-descriptors'
         project_descriptor_data = gazu.client.get(descriptors_api_path, client = kitsuManager.kitsu_client)
