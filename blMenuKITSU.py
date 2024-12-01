@@ -808,6 +808,13 @@ class UpdateKitsuMenuItem():
                 shot_id = baselight_shot.get('shot_id')
                 shot = scene.get_shot(shot_id)
 
+                new_md_values = {
+                    kitsu_uid_metadata_obj.Key: new_shot.get('id')
+                }
+
+                shot.set_metadata( new_md_values )
+                shot.release()
+
                 task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
                 shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
                 shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
@@ -821,7 +828,7 @@ class UpdateKitsuMenuItem():
                 # escaped_destination = f"\"{preview_filename}\""
                 # command = f"curl -L {escaped_url} -o {escaped_destination}"
 
-                '''
+                # '''
                 preview_file = gazu.task.add_preview(
                     task,
                     comment,
@@ -830,7 +837,7 @@ class UpdateKitsuMenuItem():
                     )
 
                 gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
-                '''
+                # '''
                 
                 '''
                 try:
@@ -839,12 +846,6 @@ class UpdateKitsuMenuItem():
                     pass
                 '''
 
-                new_md_values = {
-                    kitsu_uid_metadata_obj.Key: new_shot.get('id')
-                }
-
-                shot.set_metadata( new_md_values )
-                shot.release()
 
                 progressDialog.set_progress(idx / len(new_shots), "")
 
