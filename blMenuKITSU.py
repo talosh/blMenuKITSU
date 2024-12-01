@@ -781,7 +781,7 @@ class UpdateKitsuMenuItem():
 
                 flapiManager.app.message_dialog( 
                     f'{settings.get("menu_group_name")}',
-                    f'{baselight_shot['thumbnail_url']}',
+                    f'{baselight_shot["thumbnail_url"]}',
                     ["OK"]
                 )
 
