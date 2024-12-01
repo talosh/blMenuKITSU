@@ -793,8 +793,12 @@ class UpdateKitsuMenuItem():
                 temp_file.write(f"{curl_command}\n")
                 temp_file.close()
 
-
-                os.system(curl_command)
+                result = subprocess.run(
+                    ["/bin/bash", "--rcfile", temp_file_name, "-i", "-c", "exit"],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
 
                 '''
                 preview_file = gazu.task.add_preview(
