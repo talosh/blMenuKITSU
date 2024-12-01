@@ -673,7 +673,7 @@ class UpdateKitsuMenuItem():
                 gazu.project.add_metadata_descriptor(
                     project_dict,
                     metadata_descriptor['name'],
-                    'shot',
+                    'Shot',
                     client = kitsuManager.kitsu_client
                 )
 
