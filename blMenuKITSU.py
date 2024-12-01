@@ -320,6 +320,8 @@ class FLAPIManager():
                 thumbnail_url = self.conn.ThumbnailManager.get_poster_uri(shot, {'DCSpace': 'sRGB'})
                 encoded_uri = urllib.parse.quote(thumbnail_url, safe="/?=&")
                 # pprint (thumbnail_url)
+                # 'thumbnail_url': f"http://{socket.gethostname()}:{1985}{encoded_uri}"
+
 
                 baselight_shots.append(
                     {
@@ -329,7 +331,7 @@ class FLAPIManager():
                         'shot_md': shot_md,
                         'mark_ids': mark_ids,
                         'categories': categories,
-                        'thumbnail_url': f"http://{socket.gethostname()}:{1985}{encoded_uri}"
+                        'thumbnail_url': f"http://localhost:1985{encoded_uri}"
                     }
                 )
                 shot.release()
