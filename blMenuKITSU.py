@@ -661,9 +661,13 @@ class UpdateKitsuMenuItem():
         
         project_descriptors = gazu.project.all_metadata_descriptors(project_dict, client = kitsuManager.kitsu_client)
 
+        descriptors_api_path = '/data/projects/' + project_dict['id'] + '/metadata-descriptors'
+        project_descriptor_data = gazu.client.get(descriptors_api_path, client = kitsuManager.kitsu_client)
+        project_descriptor_names = [x['name'] for x in project_descriptor_data]
+
         flapiManager.app.message_dialog( 
             f'{settings.get("menu_group_name")}',
-            f'{pformat(project_descriptors)}',
+            f'{pformat(project_descriptor_data)}',
             ["OK"]
         )
         return False
