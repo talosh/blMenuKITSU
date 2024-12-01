@@ -785,8 +785,9 @@ class UpdateKitsuMenuItem():
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
                 curl_command = f"curl -L {escaped_url} -o {escaped_destination}"
-                os.system(curl_command)
-                
+                print (curl_command, flush=True)
+                # os.system(curl_command)
+
                 # urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
 
                 '''
