@@ -317,6 +317,7 @@ class FLAPIManager():
 
                 thumbnail_url = ''
                 thumbnail_url = self.conn.ThumbnailManager.get_poster_uri(shot, {'DCSpace': 'sRGB'})
+                encoded_uri = urllib.parse.quote(thumbnail_url, safe="/?=&")
                 # pprint (thumbnail_url)
 
                 baselight_shots.append(
@@ -327,7 +328,7 @@ class FLAPIManager():
                         'shot_md': shot_md,
                         'mark_ids': mark_ids,
                         'categories': categories,
-                        'thumbnail_url': f"http://{socket.gethostname()}:{1985}{thumbnail_url}"
+                        'thumbnail_url': f"http://{socket.gethostname()}:{1985}{encoded_uri}"
                     }
                 )
                 shot.release()
@@ -781,14 +782,12 @@ class UpdateKitsuMenuItem():
 
                 preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
                 url = str(baselight_shot['thumbnail_url'])
-
-                flapiManager.app.message_dialog( 
-                    f'{settings.get("menu_group_name")}',
-                    f'{preview_filename}',
-                    ["OK"]
-                )
-
-                urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
+                escaped_url = f"\"{url}\""
+                escaped_destination = f"\"{preview_filename}\""
+                curl_command = f"curl -L {escaped_url} -o {escaped_destination}"
+                os.system(curl_command)
+                
+                # urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
 
                 '''
                 preview_file = gazu.task.add_preview(
