@@ -641,255 +641,234 @@ class UpdateKitsuMenuItem():
             )
             return False
 
-        kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
-        baselight_shots = flapiManager.get_baselight_scene_shots()
-        kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
-        if kitsu_uid_metadata_obj is None:
-            flapiManager.app.message_dialog( 
-                f'{settings.get("menu_group_name")}',
-                f'Unable to create new metadata for kitsu-uid.',
-                ["OK"]
-            )
-            return False
-
-        projects = kitsuManager.all_open_projects()
-
-        for project in projects:
-            if project['id'] == kitsu_sequence['project_id']:
-                project_dict = project
-                break
-        
-
-        '''
-        descriptors_api_path = '/data/projects/' + project_dict['id'] + '/metadata-descriptors'
-        project_descriptor_data = gazu.client.get(descriptors_api_path, client = kitsuManager.kitsu_client)
-        '''
-
-        project_descriptor_data = gazu.project.all_metadata_descriptors(project_dict, client = kitsuManager.kitsu_client)
-        project_descriptor_names = [x['name'] for x in project_descriptor_data]
-
-        for metadata_descriptor in metadata_descriptors:
-            if metadata_descriptor.get('name') not in project_descriptor_names:
-                gazu.project.add_metadata_descriptor(
-                    project_dict,
-                    metadata_descriptor['name'],
-                    'Shot',
-                    client = kitsuManager.kitsu_client
+        try:
+            kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
+            baselight_shots = flapiManager.get_baselight_scene_shots()
+            kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
+            if kitsu_uid_metadata_obj is None:
+                flapiManager.app.message_dialog( 
+                    f'{settings.get("menu_group_name")}',
+                    f'Unable to create new metadata for kitsu-uid.',
+                    ["OK"]
                 )
+                return False
 
-                '''
-                data = {
-                    'choices': [],
-                    'for_client': False,
-                    'entity_type': 'Shot',
-                    'departments': []
-                }
+            projects = kitsuManager.all_open_projects()
 
-                for key in metadata_descriptor.keys():
-                    data[key] = metadata_descriptor[key]
+            for project in projects:
+                if project['id'] == kitsu_sequence['project_id']:
+                    project_dict = project
+                    break
+            
 
-                gazu.client.post(descriptors_api_path, data, client = kitsuManager.kitsu_client)
-                '''
+            project_descriptor_data = gazu.project.all_metadata_descriptors(project_dict, client = kitsuManager.kitsu_client)
+            project_descriptor_names = [x['name'] for x in project_descriptor_data]
 
-        kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
+            for metadata_descriptor in metadata_descriptors:
+                if metadata_descriptor.get('name') not in project_descriptor_names:
+                    gazu.project.add_metadata_descriptor(
+                        project_dict,
+                        metadata_descriptor['name'],
+                        'Shot',
+                        client = kitsuManager.kitsu_client
+                    )
 
-        kitsu_shot_uids = set()
-        for kitsu_shot in kitsu_shots:
-            kitsu_shot_uids.add(kitsu_shot.get('id'))
+            kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
 
-        def build_kitsu_shot_data(baselight_shot):
-            data = {}
-            md_descriptors = metadata_descriptors
-            md_descriptors_by_bl_key = {}
-            for md_desc in md_descriptors:
-                bl_key = md_desc.get('bl_metadata_key')
-                if not bl_key:
-                    bl_name = md_desc.get('bl_metadata_name')
-                    if not bl_name:
-                        continue
-                    else:
-                        mddefns = baselight_shot.get('mddefns')
-                        for md_def in mddefns:
-                            name = md_def.Name
-                            if name == bl_name:
-                                bl_key = md_def.Key
-                                md_descriptors_by_bl_key[bl_key] = md_desc
-                        continue
-                md_descriptors_by_bl_key[bl_key] = md_desc
-            shot_md = baselight_shot.get('shot_md')
-            for bl_key in md_descriptors_by_bl_key.keys():
-                kitsu_key = md_descriptors_by_bl_key[bl_key].get('kitsu_key')
-                value = str(shot_md.get(bl_key))
-                if 'padding' in md_descriptors_by_bl_key[bl_key].keys():
-                    padding = md_descriptors_by_bl_key[bl_key].get('padding', 0)
-                    value = value.zfill(padding)
-                data[kitsu_key] = value
-            return data
+            kitsu_shot_uids = set()
+            for kitsu_shot in kitsu_shots:
+                kitsu_shot_uids.add(kitsu_shot.get('id'))
 
-        def create_kitsu_shot_name(baselight_shot):
-            import uuid
-            shot_md = baselight_shot.get('shot_md')
-            if not shot_md:
-                return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
-            rectc_in = shot_md.get('rectc.0')
-            if not rectc_in:
-                return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
-            return str(rectc_in)
+            def build_kitsu_shot_data(baselight_shot):
+                data = {}
+                md_descriptors = metadata_descriptors
+                md_descriptors_by_bl_key = {}
+                for md_desc in md_descriptors:
+                    bl_key = md_desc.get('bl_metadata_key')
+                    if not bl_key:
+                        bl_name = md_desc.get('bl_metadata_name')
+                        if not bl_name:
+                            continue
+                        else:
+                            mddefns = baselight_shot.get('mddefns')
+                            for md_def in mddefns:
+                                name = md_def.Name
+                                if name == bl_name:
+                                    bl_key = md_def.Key
+                                    md_descriptors_by_bl_key[bl_key] = md_desc
+                            continue
+                    md_descriptors_by_bl_key[bl_key] = md_desc
+                shot_md = baselight_shot.get('shot_md')
+                for bl_key in md_descriptors_by_bl_key.keys():
+                    kitsu_key = md_descriptors_by_bl_key[bl_key].get('kitsu_key')
+                    value = str(shot_md.get(bl_key))
+                    if 'padding' in md_descriptors_by_bl_key[bl_key].keys():
+                        padding = md_descriptors_by_bl_key[bl_key].get('padding', 0)
+                        value = value.zfill(padding)
+                    data[kitsu_key] = value
+                return data
 
-        '''
-        flapiManager.app.message_dialog( 
-            f'{settings.get("menu_group_name")}',
-            f'{platform.node()}',
-            ["OK"]
-        )
-        return False
-        '''
+            def create_kitsu_shot_name(baselight_shot):
+                import uuid
+                shot_md = baselight_shot.get('shot_md')
+                if not shot_md:
+                    return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
+                rectc_in = shot_md.get('rectc.0')
+                if not rectc_in:
+                    return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
+                return str(rectc_in)
 
-        new_shots = []
-        for shot_ix, baselight_shot in enumerate(baselight_shots):        
-            shot_md = baselight_shot.get('shot_md')
-            if not shot_md:
-                continue
-            bl_kitsu_uid = shot_md.get(kitsu_uid_metadata_obj.Key)
-            if bl_kitsu_uid in kitsu_shot_uids:
-                new_data = {}
-                bl_shot_data = build_kitsu_shot_data(baselight_shot)
-                kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid)
-                kitsu_shot_data = kitsu_shot.get('data', dict())
-                for data_key in bl_shot_data.keys():
-                    if kitsu_shot_data.get(data_key):
-                        continue
-                    else:
-                        if bl_shot_data.get(data_key):
-                            new_data[data_key] = bl_shot_data.get(data_key)
-
-                if not new_data:
+            new_shots = []
+            for shot_ix, baselight_shot in enumerate(baselight_shots):        
+                shot_md = baselight_shot.get('shot_md')
+                if not shot_md:
                     continue
-                
-                for new_data_key in new_data.keys():
-                    kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
-                kitsu_shot['data'] = kitsu_shot_data
-                gazu.shot.update_shot(kitsu_shot)
-                continue
-            else:
-                new_shots.append(baselight_shot)
+                bl_kitsu_uid = shot_md.get(kitsu_uid_metadata_obj.Key)
+                if bl_kitsu_uid in kitsu_shot_uids:
+                    new_data = {}
+                    bl_shot_data = build_kitsu_shot_data(baselight_shot)
+                    kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid)
+                    kitsu_shot_data = kitsu_shot.get('data', dict())
+                    for data_key in bl_shot_data.keys():
+                        if kitsu_shot_data.get(data_key):
+                            continue
+                        else:
+                            if bl_shot_data.get(data_key):
+                                new_data[data_key] = bl_shot_data.get(data_key)
 
-        preview_items = []
+                    if not new_data:
+                        continue
+                    
+                    for new_data_key in new_data.keys():
+                        kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
+                    kitsu_shot['data'] = kitsu_shot_data
+                    gazu.shot.update_shot(kitsu_shot)
+                    continue
+                else:
+                    new_shots.append(baselight_shot)
 
-        progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots", "", True)
+            preview_items = []
 
-        progressDialog_cancelled = False
+            progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots", "", True)
 
-        def on_update_cancelled():
-            global progressDialog_cancelled
-            progressDialog_cancelled = True
-            progressDialog.hide()
-            if scene is not None:
-                scene.cancel_delta()
+            progressDialog_cancelled = False
+
+            def on_update_cancelled():
+                global progressDialog_cancelled
+                progressDialog_cancelled = True
+                progressDialog.hide()
+                if scene is not None:
+                    scene.cancel_delta()
+                    scene.set_transient_write_lock_deltas(False)
+                    scene.release()
+
+            progressDialog.connect("CancelOperation", on_update_cancelled)
+
+            try:
+                progressDialog.show()
+                progressDialog.set_progress(0, '')
+
+                scene.set_transient_write_lock_deltas(True)
+                scene.start_delta('Add kitsu metadata to shots')
+
+                for idx, baselight_shot in enumerate(new_shots):
+
+                    if progressDialog_cancelled:
+                        break
+
+                    shot_name = create_kitsu_shot_name(baselight_shot)
+                    shot_data = build_kitsu_shot_data(baselight_shot)
+
+                    progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
+
+                    new_shot = gazu.shot.new_shot(
+                        project_dict, 
+                        kitsu_sequence, 
+                        shot_name,
+                        data = shot_data,
+                        client = kitsuManager.kitsu_client
+                        # data = {'00_shot_id': baselight_shot.get('shot_id')}
+                    )
+
+                    shot_id = baselight_shot.get('shot_id')
+                    shot = scene.get_shot(shot_id)
+
+                    new_md_values = {
+                        kitsu_uid_metadata_obj.Key: new_shot.get('id')
+                    }
+
+                    shot.set_metadata( new_md_values )
+                    shot.release()
+
+                    task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
+                    shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
+                    shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
+                    task = gazu.task.new_task(new_shot, shot_task_types[0], client = kitsuManager.kitsu_client)
+                    todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
+                    comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
+
+                    preview_items.append(
+                        {'task': task,
+                        'comment': comment,
+                        'url': baselight_shot['thumbnail_url']
+                        }
+                    )
+
+                scene.end_delta()
                 scene.set_transient_write_lock_deltas(False)
                 scene.release()
 
-        progressDialog.connect("CancelOperation", on_update_cancelled)
+                progressDialog.set_progress(1, "")
+                progressDialog.hide()
 
-        try:
-            progressDialog.show()
+            except Exception as e:
+                progressDialog.hide()
+                print("Problem adding kitsu metadata to shots: %s" % e, flush=True)
+
+                if scene is not None:
+                    scene.cancel_delta()
+                    scene.set_transient_write_lock_deltas(False)
+                    scene.release()
+
+                flapiManager.app.message_dialog( 
+                    f'{settings.get("menu_group_name")}',
+                    f'Error: {pformat(e)}',
+                    ["OK"]
+                )
+                return False
+            
+            if progressDialog_cancelled:
+                return False
+            
+            progressDialog.set_title('Uploading previews to Kitsu')
             progressDialog.set_progress(0, '')
+            progressDialog.show()
 
-            scene.set_transient_write_lock_deltas(True)
-            scene.start_delta('Add kitsu metadata to shots')
-
-            for idx, baselight_shot in enumerate(new_shots):
-
+            for idx, preview_dict in enumerate(preview_items):
                 if progressDialog_cancelled:
                     break
+                
+                progressDialog.set_progress(idx / len(preview_items), f'Uploading {idx + 1} of {len(preview_items)}')
 
-                shot_name = create_kitsu_shot_name(baselight_shot)
-                shot_data = build_kitsu_shot_data(baselight_shot)
-
-                progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
-
-                new_shot = gazu.shot.new_shot(
-                    project_dict, 
-                    kitsu_sequence, 
-                    shot_name,
-                    data = shot_data,
+                preview_file = gazu.task.add_preview(
+                    preview_dict['task'],
+                    preview_dict['comment'],
+                    preview_file_url = preview_dict['url'],
                     client = kitsuManager.kitsu_client
-                    # data = {'00_shot_id': baselight_shot.get('shot_id')}
-                )
-
-                shot_id = baselight_shot.get('shot_id')
-                shot = scene.get_shot(shot_id)
-
-                new_md_values = {
-                    kitsu_uid_metadata_obj.Key: new_shot.get('id')
-                }
-
-                shot.set_metadata( new_md_values )
-                shot.release()
-
-                task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
-                shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
-                shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
-                task = gazu.task.new_task(new_shot, shot_task_types[0], client = kitsuManager.kitsu_client)
-                todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
-                comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
-
-                preview_items.append(
-                    {'task': task,
-                    'comment': comment,
-                    'url': baselight_shot['thumbnail_url']
-                    }
-                )
-
-            scene.end_delta()
-            scene.set_transient_write_lock_deltas(False)
-            scene.release()
+                    )
+                gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
 
             progressDialog.set_progress(1, "")
             progressDialog.hide()
 
+            return True
         except Exception as e:
-            progressDialog.hide()
-            print("Problem adding kitsu metadata to shots: %s" % e, flush=True)
-
-            if scene is not None:
-                scene.cancel_delta()
-                scene.set_transient_write_lock_deltas(False)
-                scene.release()
-
             flapiManager.app.message_dialog( 
                 f'{settings.get("menu_group_name")}',
-                f'Error: {pformat(e)}',
+                f'Error updating Kitsu: {e}',
                 ["OK"]
             )
             return False
-        
-        if progressDialog_cancelled:
-            return False
-        
-        progressDialog.set_title('Uploading previews to Kitsu')
-        progressDialog.set_progress(0, '')
-        progressDialog.show()
-
-        for idx, preview_dict in enumerate(preview_items):
-            if progressDialog_cancelled:
-                break
-            
-            progressDialog.set_progress(idx / len(preview_items), f'Uploading {idx + 1} of {len(preview_items)}')
-
-            preview_file = gazu.task.add_preview(
-                preview_dict['task'],
-                preview_dict['comment'],
-                preview_file_url = preview_dict['url'],
-                client = kitsuManager.kitsu_client
-                )
-            gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
-
-        progressDialog.set_progress(1, "")
-        progressDialog.hide()
-
-        return True
-
 
     def ProjectSceneDialog(self):
 
