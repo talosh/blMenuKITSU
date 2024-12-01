@@ -806,6 +806,8 @@ class UpdateKitsuMenuItem():
                 shot_name = create_kitsu_shot_name(baselight_shot)
                 shot_data = build_kitsu_shot_data(baselight_shot)
 
+                progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
+
                 new_shot = gazu.shot.new_shot(
                     project_dict, 
                     kitsu_sequence, 
@@ -838,8 +840,6 @@ class UpdateKitsuMenuItem():
                     'url': baselight_shot['thumbnail_url']
                     }
                 )
-
-                progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
 
             scene.end_delta()
             scene.set_transient_write_lock_deltas(False)
