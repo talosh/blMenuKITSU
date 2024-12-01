@@ -797,6 +797,7 @@ class UpdateKitsuMenuItem():
                 escaped_destination = f"\"{preview_filename}\""
                 command = f"curl -L {escaped_url} -o {escaped_destination}"
 
+                multiprocessing.set_start_method('spawn', force=True)
                 process = multiprocessing.Process(target=run_command, args=(command,))
                 process.start()
                 process.join()
