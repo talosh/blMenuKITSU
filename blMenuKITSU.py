@@ -658,7 +658,18 @@ class UpdateKitsuMenuItem():
             if project['id'] == kitsu_sequence['project_id']:
                 project_dict = project
                 break
+        
+        project_descriptors = gazu.project.all_metadata_descriptors(project_dict, client = kitsuManager.kitsu_client)
 
+        flapiManager.app.message_dialog( 
+            f'{settings.get("menu_group_name")}',
+            f'{pformat(project_descriptors)}',
+            ["OK"]
+        )
+        return False
+
+
+        '''
         descriptors_api_path = '/data/projects/' + project_dict['id'] + '/metadata-descriptors'
         project_descriptor_data = gazu.client.get(descriptors_api_path, client = kitsuManager.kitsu_client)
         project_descriptor_names = [x['name'] for x in project_descriptor_data]
@@ -676,6 +687,7 @@ class UpdateKitsuMenuItem():
                     data[key] = metadata_descriptor[key]
 
                 gazu.client.post(descriptors_api_path, data, client = kitsuManager.kitsu_client)
+        '''
 
         kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
 
