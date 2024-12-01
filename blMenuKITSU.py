@@ -781,22 +781,23 @@ class UpdateKitsuMenuItem():
                 todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
                 comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
 
-                preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
+                # preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
                 url = str(baselight_shot['thumbnail_url'])
-                escaped_url = f"\"{url}\""
-                escaped_destination = f"\"{preview_filename}\""
-                command = f"curl -L {escaped_url} -o {escaped_destination}"
+                # escaped_url = f"\"{url}\""
+                # escaped_destination = f"\"{preview_filename}\""
+                # command = f"curl -L {escaped_url} -o {escaped_destination}"
 
-                '''
+                # '''
                 preview_file = gazu.task.add_preview(
                     task,
                     comment,
-                    preview_filename,
+                    preview_file_url = url,
                     client = kitsuManager.kitsu_client
                     )
 
                 gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
-
+                
+                '''
                 try:
                     os.remove(preview_filename)
                 except:
