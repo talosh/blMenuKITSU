@@ -807,7 +807,7 @@ class UpdateKitsuMenuItem():
                 # escaped_destination = f"\"{preview_filename}\""
                 # command = f"curl -L {escaped_url} -o {escaped_destination}"
 
-                # '''
+                '''
                 preview_file = gazu.task.add_preview(
                     task,
                     comment,
@@ -816,6 +816,7 @@ class UpdateKitsuMenuItem():
                     )
 
                 gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
+                '''
                 
                 '''
                 try:
