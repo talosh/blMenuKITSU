@@ -740,14 +740,6 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
-        def copy_to_clipboard(text):
-            root = tk.Tk()
-            root.withdraw()  # Hide the main window
-            root.clipboard_clear()
-            root.clipboard_append(text)
-            root.update()  # Keep the clipboard content after the window is closed
-            root.destroy()
-
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
         def on_update_cancelled():
