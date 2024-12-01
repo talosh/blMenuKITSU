@@ -787,7 +787,7 @@ class UpdateKitsuMenuItem():
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
                 curl_command = f"curl -L {escaped_url} -o {escaped_destination} -m 1"
-                print (curl_command)
+                print (curl_command, flush=True)
                 # os.system(curl_command)
 
                 '''
