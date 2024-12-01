@@ -786,9 +786,9 @@ class UpdateKitsuMenuItem():
                 url = str(baselight_shot['thumbnail_url'])
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
-                curl_command = f"curl -L {escaped_url} -o {escaped_destination} -m 1"
-                print (curl_command, flush=True)
-                # os.system(curl_command)
+                command = f"wget {escaped_url} -o {escaped_destination}"
+                print (command, flush=True)
+                os.system(command)
 
                 '''
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.bashrc', mode='w')
