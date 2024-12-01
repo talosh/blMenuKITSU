@@ -659,6 +659,24 @@ class UpdateKitsuMenuItem():
                 project_dict = project
                 break
 
+        descriptors_api_path = '/data/projects/' + project_dict['id'] + '/metadata-descriptors'
+        project_descriptor_data = gazu.client.get(descriptors_api_path, client = kitsuManager.kitsu_client)
+        project_descriptor_names = [x['name'] for x in project_descriptor_data]
+        
+        for metadata_descriptor in metadata_descriptors:
+            if metadata_descriptor.get('name') not in project_descriptor_names:
+                data = {
+                    'choices': [],
+                    'for_client': False,
+                    'entity_type': 'Shot',
+                    'departments': []
+                }
+
+                for key in metadata_descriptor.keys():
+                    data[key] = metadata_descriptor[key]
+
+                gazu.client.post(descriptors_api_path, data, client = kitsuManager.kitsu_client)
+
         kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
 
         kitsu_shot_uids = set()
