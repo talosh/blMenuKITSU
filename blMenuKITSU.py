@@ -774,6 +774,8 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
+        preview_items = []
+
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
         def on_update_cancelled():
@@ -822,21 +824,19 @@ class UpdateKitsuMenuItem():
                 todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
                 comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
 
+                preview_items.append(
+                    {'task': task,
+                    'comment': comment,
+                    'url': baselight_shot['thumbnail_url']
+                    }
+                )
+
                 # preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
-                url = str(baselight_shot['thumbnail_url'])
                 # escaped_url = f"\"{url}\""
                 # escaped_destination = f"\"{preview_filename}\""
                 # command = f"curl -L {escaped_url} -o {escaped_destination}"
 
                 # '''
-                preview_file = gazu.task.add_preview(
-                    task,
-                    comment,
-                    preview_file_url = url,
-                    client = kitsuManager.kitsu_client
-                    )
-
-                gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
                 # '''
                 
                 '''
@@ -871,6 +871,16 @@ class UpdateKitsuMenuItem():
                 ["OK"]
             )
             return False
+        
+        for preview_dict in preview_items:
+            preview_file = gazu.task.add_preview(
+                preview_dict['task'],
+                preview_dict['comment'],
+                preview_file_url = preview_dict['url'],
+                client = kitsuManager.kitsu_client
+                )
+            gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
+
 
 
     def ProjectSceneDialog(self):
