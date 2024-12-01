@@ -780,6 +780,7 @@ class UpdateKitsuMenuItem():
                 comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
 
                 preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
+                url = str(baselight_shot['thumbnail_url'])
 
                 flapiManager.app.message_dialog( 
                     f'{settings.get("menu_group_name")}',
@@ -787,8 +788,7 @@ class UpdateKitsuMenuItem():
                     ["OK"]
                 )
 
-                # preview_filename = os.path.join('/var/tmp', f'{baselight_shot["shot_id"]}.jpg')
-                # urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
+                urllib.request.urlretrieve(baselight_shot['thumbnail_url'], preview_filename)
 
                 '''
                 preview_file = gazu.task.add_preview(
