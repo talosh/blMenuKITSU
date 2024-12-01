@@ -4,6 +4,7 @@ import inspect
 import platform
 import socket
 import subprocess
+import tempfile
 
 from urllib.parse import urljoin, urlparse
 import urllib.request
@@ -786,6 +787,13 @@ class UpdateKitsuMenuItem():
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
                 curl_command = f"curl -L {escaped_url} -o {escaped_destination}"
+
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.bashrc', mode='w')
+                temp_file_name = temp_file.name
+                temp_file.write(f"{curl_command}\n")
+                temp_file.close()
+
+
                 os.system(curl_command)
 
                 '''
