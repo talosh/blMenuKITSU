@@ -4,7 +4,7 @@ import inspect
 import platform
 import socket
 import subprocess
-import multiprocessing
+import tkinter as tk
 
 from urllib.parse import urljoin, urlparse
 import urllib.request
@@ -741,14 +741,13 @@ class UpdateKitsuMenuItem():
             else:
                 new_shots.append(baselight_shot)
 
-        def run_command(command):
-            result = subprocess.run(
-                command,
-                shell=True,
-                check=True,
-                capture_output=True,
-                text=True
-            )
+        def copy_to_clipboard(text):
+            root = tk.Tk()
+            root.withdraw()  # Hide the main window
+            root.clipboard_clear()
+            root.clipboard_append(text)
+            root.update()  # Keep the clipboard content after the window is closed
+            root.destroy()
 
         progressDialog = flapiManager.conn.ProgressDialog.create("Updating Kitsu shots...", "", True)
 
@@ -797,19 +796,15 @@ class UpdateKitsuMenuItem():
                 escaped_destination = f"\"{preview_filename}\""
                 command = f"curl -L {escaped_url} -o {escaped_destination}"
 
-                '''
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.bashrc', mode='w')
-                temp_file_name = temp_file.name
-                temp_file.write(f"{curl_command}\n")
-                temp_file.close()
+                copy_to_clipboard(command)
 
-                result = subprocess.run(
-                    ["/bin/bash", "--rcfile", temp_file_name, "-i", "-c", "exit"],
-                    check=True,
-                    capture_output=True,
-                    text=True
+                flapiManager.app.message_dialog( 
+                    f'{settings.get("menu_group_name")}',
+                    f'Please paste command from clipboard into terminal',
+                    ["OK"]
                 )
-                '''
+
+
 
                 '''
                 preview_file = gazu.task.add_preview(
