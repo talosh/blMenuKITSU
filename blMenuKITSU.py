@@ -793,7 +793,7 @@ class UpdateKitsuMenuItem():
 
         try:
             progressDialog.show()
-            progressDialog.set_progress(0, "")
+            progressDialog.set_progress(0, '')
 
             scene.set_transient_write_lock_deltas(True)
             scene.start_delta('Add kitsu metadata to shots')
@@ -839,7 +839,7 @@ class UpdateKitsuMenuItem():
                     }
                 )
 
-                progressDialog.set_progress(idx / len(new_shots), "")
+                progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
 
             scene.end_delta()
             scene.set_transient_write_lock_deltas(False)
