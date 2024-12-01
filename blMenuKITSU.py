@@ -787,7 +787,8 @@ class UpdateKitsuMenuItem():
                 escaped_url = f"\"{url}\""
                 escaped_destination = f"\"{preview_filename}\""
                 curl_command = f"curl -L {escaped_url} -o {escaped_destination} -m 1"
-                os.system(curl_command)
+                print (curl_command)
+                # os.system(curl_command)
 
                 '''
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.bashrc', mode='w')
