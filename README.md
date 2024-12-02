@@ -3,7 +3,7 @@ Baselight integration with Kitsu / Zou
 
 ### Installation
 
-Place blMenuKitsu.py file and blMenuKitsu.packages folder to Baselight scripts folder (i.e. /usr/fl/scripts).
+Copy blMenuKitsu.py file and blMenuKitsu.packages folder to Baselight scripts folder (i.e. /usr/fl/scripts).
 
 ### Packages and dependendencies
 
