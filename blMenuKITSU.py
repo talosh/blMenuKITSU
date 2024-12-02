@@ -16,7 +16,7 @@ settings = {
     'menu_group_name': 'Kitsu',
     'debug': False,
     'app_name': 'blMenuKITSU',
-    'version': 'v0.0.2.dev.002',
+    'version': 'v0.0.2',
 }
 
 metadata_descriptors = [
