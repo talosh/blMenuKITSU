@@ -1,5 +1,0 @@
-urllib3<2.0
-pyinstaller
-pyqt5
-gazu
-websocket-client
