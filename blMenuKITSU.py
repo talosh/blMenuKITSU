@@ -775,44 +775,47 @@ class UpdateKitsuMenuItem():
 
                     if progressDialog_cancelled:
                         break
+                    
+                    try:
+                        shot_name = create_kitsu_shot_name(baselight_shot)
+                        shot_data = build_kitsu_shot_data(baselight_shot)
 
-                    shot_name = create_kitsu_shot_name(baselight_shot)
-                    shot_data = build_kitsu_shot_data(baselight_shot)
+                        progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
 
-                    progressDialog.set_progress(idx / len(new_shots), f'Updating {idx + 1} of {len(new_shots)}')
+                        new_shot = gazu.shot.new_shot(
+                            project_dict, 
+                            kitsu_sequence, 
+                            shot_name,
+                            data = shot_data,
+                            client = kitsuManager.kitsu_client
+                            # data = {'00_shot_id': baselight_shot.get('shot_id')}
+                        )
 
-                    new_shot = gazu.shot.new_shot(
-                        project_dict, 
-                        kitsu_sequence, 
-                        shot_name,
-                        data = shot_data,
-                        client = kitsuManager.kitsu_client
-                        # data = {'00_shot_id': baselight_shot.get('shot_id')}
-                    )
+                        shot_id = baselight_shot.get('shot_id')
+                        shot = scene.get_shot(shot_id)
 
-                    shot_id = baselight_shot.get('shot_id')
-                    shot = scene.get_shot(shot_id)
-
-                    new_md_values = {
-                        kitsu_uid_metadata_obj.Key: new_shot.get('id')
-                    }
-
-                    shot.set_metadata( new_md_values )
-                    shot.release()
-
-                    task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
-                    shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
-                    shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
-                    task = gazu.task.new_task(new_shot, shot_task_types[0], client = kitsuManager.kitsu_client)
-                    todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
-                    comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
-
-                    preview_items.append(
-                        {'task': task,
-                        'comment': comment,
-                        'url': baselight_shot['thumbnail_url']
+                        new_md_values = {
+                            kitsu_uid_metadata_obj.Key: new_shot.get('id')
                         }
-                    )
+
+                        shot.set_metadata( new_md_values )
+                        shot.release()
+
+                        task_types = gazu.task.all_task_types(client = kitsuManager.kitsu_client)
+                        shot_task_types = [t for t in task_types if t['for_entity'] == 'Shot']
+                        shot_task_types = sorted(shot_task_types, key=lambda d: d['priority'])
+                        task = gazu.task.new_task(new_shot, shot_task_types[0], client = kitsuManager.kitsu_client)
+                        todo = gazu.task.get_task_status_by_short_name("todo", client = kitsuManager.kitsu_client)
+                        comment = gazu.task.add_comment(task, todo, "Add thumbnail", client = kitsuManager.kitsu_client)
+
+                        preview_items.append(
+                            {'task': task,
+                            'comment': comment,
+                            'url': baselight_shot['thumbnail_url']
+                            }
+                        )
+                    except Exception as e:
+                        print(f'Failed to create shot {shot_name}. Error: {e}', flush=True)
 
                 scene.end_delta()
                 scene.set_transient_write_lock_deltas(False)
