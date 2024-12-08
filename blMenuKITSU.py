@@ -840,6 +840,8 @@ class UpdateKitsuMenuItem():
             if progressDialog_cancelled:
                 return False
             
+            MAX_RETRIES = 3
+
             progressDialog.set_title('Uploading previews to Kitsu')
             progressDialog.set_progress(0, '')
             progressDialog.show()
@@ -850,13 +852,28 @@ class UpdateKitsuMenuItem():
                 
                 progressDialog.set_progress(idx / len(preview_items), f'Uploading {idx + 1} of {len(preview_items)}')
 
-                preview_file = gazu.task.add_preview(
-                    preview_dict['task'],
-                    preview_dict['comment'],
-                    preview_file_url = preview_dict['url'],
-                    client = kitsuManager.kitsu_client
-                    )
-                gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
+                # Attempt to add preview with retries
+                attempt = 0
+                preview_file = None
+                while attempt < MAX_RETRIES:
+                    try:
+                        preview_file = gazu.task.add_preview(
+                            preview_dict['task'],
+                            preview_dict['comment'],
+                            preview_file_url = preview_dict['url'],
+                            client = kitsuManager.kitsu_client
+                            )
+                        break
+                    except Exception as e:
+                        attempt += 1
+                        if attempt < MAX_RETRIES:
+                            print(f'Attempt {attempt}/{MAX_RETRIES} failed. Retrying... Error: {e}', flush=True)
+                        else:
+                            print(f'Failed to upload preview after {MAX_RETRIES} attempts. Error: {e}', flush=True)
+                            preview_file = None
+
+                if preview_file:
+                    gazu.task.set_main_preview(preview_file, client = kitsuManager.kitsu_client)
 
             progressDialog.set_progress(1, "")
             progressDialog.hide()
