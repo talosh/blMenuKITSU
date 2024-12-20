@@ -16,7 +16,7 @@ settings = {
     'menu_group_name': 'Kitsu',
     'debug': False,
     'app_name': 'blMenuKITSU',
-    'version': 'v0.0.2',
+    'version': 'v0.0.3 dev 001',
 }
 
 metadata_descriptors = [
@@ -642,8 +642,11 @@ class UpdateKitsuMenuItem():
             return False
 
         try:
+            print ('getting kutsu sequence', flush=True)
             kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
+            print ('getting kutsubaselight shots', flush=True)
             baselight_shots = flapiManager.get_baselight_scene_shots()
+            print ('getting kitsu_uid_metadata_obj', flush=True)
             kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
             if kitsu_uid_metadata_obj is None:
                 flapiManager.app.message_dialog( 
@@ -653,6 +656,7 @@ class UpdateKitsuMenuItem():
                 )
                 return False
 
+            print ('calling kitsuManager.all_open_projects()', flush=True)
             projects = kitsuManager.all_open_projects()
 
             for project in projects:
@@ -999,6 +1003,7 @@ class UpdateKitsuMenuItem():
         )
         '''
 
+
 class AboutMenuItem():
     def __init__(self):
         self.menuItem = flapiManager.conn.MenuItem.create(f'Version {settings.get("version")}', 'uk.ltd.filmlight.kitsu.about')
@@ -1031,6 +1036,7 @@ class AboutMenuItem():
             f'{settings.get("app_name")}: {settings.get("version")}\n{gazu_str}\n{python_str}',
             ["OK"]
         )
+
 
 prefs = Prefs(**settings)
 
