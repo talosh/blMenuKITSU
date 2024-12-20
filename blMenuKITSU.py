@@ -735,8 +735,10 @@ class UpdateKitsuMenuItem():
                 if bl_kitsu_uid in kitsu_shot_uids:
                     new_data = {}
                     bl_shot_data = build_kitsu_shot_data(baselight_shot)
+                    
                     print (f'calling gazu.shot.get_shot(bl_kitsu_uid) uid: {bl_kitsu_uid}', flush=True)
-                    kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid)
+
+                    kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid, client = kitsuManager.kitsu_client)
                     kitsu_shot_data = kitsu_shot.get('data', dict())
                     for data_key in bl_shot_data.keys():
                         if kitsu_shot_data.get(data_key):
@@ -752,7 +754,7 @@ class UpdateKitsuMenuItem():
                         kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
                     kitsu_shot['data'] = kitsu_shot_data
                     print ('calling gazu.shot.update_shot(kitsu_shot)', flush=True)
-                    gazu.shot.update_shot(kitsu_shot)
+                    gazu.shot.update_shot(kitsu_shot, client = kitsuManager.kitsu_client)
                     continue
                 else:
                     new_shots.append(baselight_shot)
