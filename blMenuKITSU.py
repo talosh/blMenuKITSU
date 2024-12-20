@@ -665,6 +665,7 @@ class UpdateKitsuMenuItem():
                     break
             
 
+            print ('calling gazu.project.all_metadata_descriptors', flush=True)
             project_descriptor_data = gazu.project.all_metadata_descriptors(project_dict, client = kitsuManager.kitsu_client)
             project_descriptor_names = [x['name'] for x in project_descriptor_data]
 
@@ -677,6 +678,7 @@ class UpdateKitsuMenuItem():
                         client = kitsuManager.kitsu_client
                     )
 
+            print ('calling gazu.shot.all_shots_for_sequence', flush=True)
             kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
 
             kitsu_shot_uids = set()
