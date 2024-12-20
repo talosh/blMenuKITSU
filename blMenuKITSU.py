@@ -724,8 +724,10 @@ class UpdateKitsuMenuItem():
                     return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
                 return str(rectc_in)
 
+            print (f'Iterating over {len(baselight_shots)} shots', flush=True)
             new_shots = []
-            for shot_ix, baselight_shot in enumerate(baselight_shots):        
+            for shot_ix, baselight_shot in enumerate(baselight_shots):
+                print (f'shot {shot_ix}')
                 shot_md = baselight_shot.get('shot_md')
                 if not shot_md:
                     continue
@@ -733,6 +735,7 @@ class UpdateKitsuMenuItem():
                 if bl_kitsu_uid in kitsu_shot_uids:
                     new_data = {}
                     bl_shot_data = build_kitsu_shot_data(baselight_shot)
+                    print ('calling gazu.shot.get_shot(bl_kitsu_uid)', flush=True)
                     kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid)
                     kitsu_shot_data = kitsu_shot.get('data', dict())
                     for data_key in bl_shot_data.keys():
@@ -748,10 +751,13 @@ class UpdateKitsuMenuItem():
                     for new_data_key in new_data.keys():
                         kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
                     kitsu_shot['data'] = kitsu_shot_data
+                    print ('calling gazu.shot.update_shot(kitsu_shot)', flush=True)
                     gazu.shot.update_shot(kitsu_shot)
                     continue
                 else:
                     new_shots.append(baselight_shot)
+
+            print (f'Finished itetating over shots', flush=True)
 
             preview_items = []
 
