@@ -726,7 +726,7 @@ class UpdateKitsuMenuItem():
                 if bl_kitsu_uid in kitsu_shot_uids:
                     new_data = {}
                     bl_shot_data = build_kitsu_shot_data(baselight_shot)
-                    kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid, client = kitsuManager.kitsu_client)
+                    kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid)
                     kitsu_shot_data = kitsu_shot.get('data', dict())
                     for data_key in bl_shot_data.keys():
                         if kitsu_shot_data.get(data_key):
