@@ -3,7 +3,7 @@ import sys
 import inspect
 import platform
 import socket
-import subprocess
+import traceback
 
 from urllib.parse import urljoin, urlparse
 import urllib.request
@@ -642,11 +642,8 @@ class UpdateKitsuMenuItem():
             return False
 
         try:
-            print ('getting kutsu sequence', flush=True)
             kitsu_sequence = gazu.entity.get_entity(kitsu_sequence_id, client = kitsuManager.kitsu_client)
-            print ('getting kutsubaselight shots', flush=True)
             baselight_shots = flapiManager.get_baselight_scene_shots()
-            print ('getting kitsu_uid_metadata_obj', flush=True)
             kitsu_uid_metadata_obj = flapiManager.get_kitsu_metadata_definition()
             if kitsu_uid_metadata_obj is None:
                 flapiManager.app.message_dialog( 
@@ -656,7 +653,6 @@ class UpdateKitsuMenuItem():
                 )
                 return False
 
-            print ('calling kitsuManager.all_open_projects()', flush=True)
             projects = kitsuManager.all_open_projects()
 
             for project in projects:
@@ -664,8 +660,6 @@ class UpdateKitsuMenuItem():
                     project_dict = project
                     break
             
-
-            print ('calling gazu.project.all_metadata_descriptors', flush=True)
             project_descriptor_data = gazu.project.all_metadata_descriptors(project_dict, client = kitsuManager.kitsu_client)
             project_descriptor_names = [x['name'] for x in project_descriptor_data]
 
@@ -678,7 +672,6 @@ class UpdateKitsuMenuItem():
                         client = kitsuManager.kitsu_client
                     )
 
-            print ('calling gazu.shot.all_shots_for_sequence', flush=True)
             kitsu_shots = gazu.shot.all_shots_for_sequence(kitsu_sequence, client = kitsuManager.kitsu_client)
 
             kitsu_shot_uids = set()
@@ -724,10 +717,8 @@ class UpdateKitsuMenuItem():
                     return ((str(uuid.uuid1()).replace('-', '')).upper())[:4]
                 return str(rectc_in)
 
-            print (f'Iterating over {len(baselight_shots)} shots', flush=True)
             new_shots = []
             for shot_ix, baselight_shot in enumerate(baselight_shots):
-                print (f'shot {shot_ix}')
                 shot_md = baselight_shot.get('shot_md')
                 if not shot_md:
                     continue
@@ -735,9 +726,6 @@ class UpdateKitsuMenuItem():
                 if bl_kitsu_uid in kitsu_shot_uids:
                     new_data = {}
                     bl_shot_data = build_kitsu_shot_data(baselight_shot)
-                    
-                    print (f'calling gazu.shot.get_shot(bl_kitsu_uid) uid: {bl_kitsu_uid}', flush=True)
-
                     kitsu_shot = gazu.shot.get_shot(bl_kitsu_uid, client = kitsuManager.kitsu_client)
                     kitsu_shot_data = kitsu_shot.get('data', dict())
                     for data_key in bl_shot_data.keys():
@@ -753,13 +741,10 @@ class UpdateKitsuMenuItem():
                     for new_data_key in new_data.keys():
                         kitsu_shot_data[new_data_key] = new_data.get(new_data_key)
                     kitsu_shot['data'] = kitsu_shot_data
-                    print ('calling gazu.shot.update_shot(kitsu_shot)', flush=True)
                     gazu.shot.update_shot(kitsu_shot, client = kitsuManager.kitsu_client)
                     continue
                 else:
                     new_shots.append(baselight_shot)
-
-            print (f'Finished itetating over shots', flush=True)
 
             preview_items = []
 
@@ -897,9 +882,10 @@ class UpdateKitsuMenuItem():
 
             return True
         except Exception as e:
+            traceback_str = traceback.format_exc()
             flapiManager.app.message_dialog( 
                 f'{settings.get("menu_group_name")}',
-                f'Error updating Kitsu: {e}',
+                f'Error updating Kitsu: {e}\nTraceback details: {traceback_str}',
                 ["OK"]
             )
             return False
