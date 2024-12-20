@@ -883,11 +883,14 @@ class UpdateKitsuMenuItem():
             return True
         except Exception as e:
             traceback_str = traceback.format_exc()
-            flapiManager.app.message_dialog( 
+            result = flapiManager.app.message_dialog( 
                 f'{settings.get("menu_group_name")}',
-                f'Error updating Kitsu: {e}\nTraceback details: {traceback_str}',
-                ["OK"]
+                f'Error updating Kitsu: {e}',
+                ["Traceback", "OK"]
             )
+
+            print (f'dialog result: {result}', flush=True)
+
             return False
 
     def ProjectSceneDialog(self):
